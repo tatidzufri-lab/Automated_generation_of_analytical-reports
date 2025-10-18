@@ -1,0 +1,344 @@
+/* Стили для аналитического отчёта */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f8f9fa;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Заголовок */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid #2E86AB;
+}
+
+.header h1 {
+    color: #2E86AB;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.generated-date {
+    color: #666;
+    font-size: 1.1em;
+    font-style: italic;
+}
+
+/* Секции */
+section {
+    margin-bottom: 40px;
+}
+
+section h2 {
+    color: #2E86AB;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #A23B72;
+}
+
+/* Метрики */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-left: 4px solid #A23B72;
+}
+
+.metric-card h3 {
+    color: #495057;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.metric-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2E86AB;
+    margin: 0;
+}
+
+/* Графики */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.chart-container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border: 1px solid #dee2e6;
+}
+
+.chart-container h3 {
+    color: #2E86AB;
+    font-size: 1.3em;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.chart-image {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Таблицы */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    table-layout: fixed; /* Фиксированная ширина колонок */
+    page-break-inside: auto; /* Разрешаем разрыв таблицы между страницами */
+}
+
+.data-table th {
+    background: linear-gradient(135deg, #2E86AB 0%, #A23B72 100%);
+    color: white;
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 1.1em;
+    page-break-inside: avoid; /* Запрещаем разрыв внутри заголовка */
+    break-inside: avoid;
+}
+
+.data-table td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: top;
+    page-break-inside: avoid; /* Запрещаем разрыв внутри ячейки */
+    break-inside: avoid;
+    word-wrap: break-word; /* Перенос длинных слов */
+    overflow-wrap: break-word;
+}
+
+.data-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.data-table tr:hover {
+    background-color: #e3f2fd;
+}
+
+.data-table .number {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #2E86AB;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .header h1 {
+        font-size: 2em;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .data-table {
+        font-size: 0.9em;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px 6px;
+    }
+}
+
+/* Печать и PDF */
+@media print {
+    body {
+        background-color: white;
+        font-size: 12px; /* Уменьшаем размер шрифта для экономии места */
+    }
+    
+    .container {
+        box-shadow: none;
+        max-width: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .chart-image {
+        max-width: 100%;
+        page-break-inside: avoid;
+    }
+    
+    .metric-card {
+        page-break-inside: avoid;
+    }
+    
+    /* Специальные стили для таблиц в PDF */
+    .data-table {
+        font-size: 10px; /* Уменьшаем размер шрифта таблиц */
+        page-break-inside: auto;
+        table-layout: fixed;
+        width: 100%;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 6px 4px; /* Уменьшаем отступы */
+        font-size: 10px;
+        line-height: 1.2;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .data-table th {
+        background: #2E86AB !important; /* Убираем градиент для печати */
+        color: white !important;
+        font-weight: bold;
+    }
+    
+    /* Настройки для колонок таблицы */
+    .data-table th:nth-child(1),
+    .data-table td:nth-child(1) {
+        width: 20%; /* Первая колонка - 20% */
+    }
+    
+    .data-table th:nth-child(2),
+    .data-table td:nth-child(2) {
+        width: 15%; /* Вторая колонка - 15% */
+    }
+    
+    .data-table th:nth-child(3),
+    .data-table td:nth-child(3) {
+        width: 15%; /* Третья колонка - 15% */
+    }
+    
+    .data-table th:nth-child(4),
+    .data-table td:nth-child(4) {
+        width: 15%; /* Четвертая колонка - 15% */
+    }
+    
+    .data-table th:nth-child(5),
+    .data-table td:nth-child(5) {
+        width: 15%; /* Пятая колонка - 15% */
+    }
+    
+    .data-table th:nth-child(6),
+    .data-table td:nth-child(6) {
+        width: 20%; /* Шестая колонка - 20% */
+    }
+    
+    /* Секции с таблицами */
+    .top-items-section,
+    .sample-data-section {
+        page-break-inside: auto;
+    }
+    
+    /* Заголовки секций */
+    section h2 {
+        page-break-after: avoid;
+        page-break-inside: avoid;
+    }
+    
+    /* Дополнительные правила для WeasyPrint */
+    .data-table tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* Обеспечиваем, что таблица не разрывается внутри строки */
+    .data-table tbody tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* Настройки для длинных таблиц */
+    .data-table tbody {
+        page-break-inside: auto;
+    }
+    
+    /* Улучшенное отображение текста в ячейках */
+    .data-table td {
+        hyphens: auto; /* Автоматическая расстановка переносов */
+        -webkit-hyphens: auto;
+        -moz-hyphens: auto;
+        -ms-hyphens: auto;
+    }
+}
+
+/* Дополнительные стили для WeasyPrint */
+@page {
+    size: A4;
+    margin: 1cm;
+    @bottom-center {
+        content: "Страница " counter(page);
+        font-size: 10px;
+        color: #666;
+    }
+}
+
+/* Специальные классы для таблиц */
+.table-container {
+    page-break-inside: auto;
+    overflow: visible;
+}
+
+.table-container .data-table {
+    page-break-inside: auto;
+}
+
+/* Стили для предотвращения разрывов */
+.no-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.break-before {
+    page-break-before: always;
+    break-before: page;
+}

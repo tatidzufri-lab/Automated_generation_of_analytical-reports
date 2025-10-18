@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок -->
+        <header class="header">
+            <h1>{{ title }}</h1>
+            <p class="generated-date">Сгенерирован: {{ generated_at }}</p>
+        </header>
+
+        <!-- Ключевые метрики -->
+        <section class="metrics-section">
+            <h2>Ключевые метрики</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Общая сумма продаж</h3>
+                    <p class="metric-value">{{ "%.2f"|format(total_sales) }} руб.</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Средний чек</h3>
+                    <p class="metric-value">{{ "%.2f"|format(avg_ticket) }} руб.</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Количество заказов</h3>
+                    <p class="metric-value">{{ "{:,}".format(total_orders) }}</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Графики -->
+        <section class="charts-section">
+            <h2>Визуализация данных</h2>
+            <div class="charts-grid">
+                {% if timeseries_png %}
+                <div class="chart-container">
+                    <h3>Динамика продаж</h3>
+                    <img src="{{ timeseries_png }}" alt="График динамики продаж" class="chart-image">
+                </div>
+                {% endif %}
+                
+                {% if top_items_png %}
+                <div class="chart-container">
+                    <h3>Топ позиций</h3>
+                    <img src="{{ top_items_png }}" alt="График топ позиций" class="chart-image">
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Топ позиций (таблица) -->
+        {% if top_items is defined and top_items is not none and top_items|length > 0 %}
+        <section class="top-items-section">
+            <h2>Топ позиций по продажам</h2>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Позиция</th>
+                            <th>Сумма продаж (руб.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in top_items %}
+                        <tr>
+                            <td>{{ item.item }}</td>
+                            <td class="number">{{ "%.2f"|format(item.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Первые 10 строк данных -->
+        {% if sample_rows is defined and sample_rows is not none and sample_rows|length > 0 %}
+        <section class="sample-data-section">
+            <h2>Первые 10 строк данных</h2>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            {% for key, value in sample_rows[0].items() %}
+                            <th>{{ key }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in sample_rows %}
+                        <tr>
+                            {% for key, value in row.items() %}
+                            <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+</body>
+</html>
