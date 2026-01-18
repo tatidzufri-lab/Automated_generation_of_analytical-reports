@@ -34,13 +34,8 @@ env/
 *~
 .DS_Store
 
-# Output files (generated reports)
-output/*.png
-output/*.pdf
-output/*.pptx
-
-# Keep output folder structure
-!output/.gitkeep
+# Output folder (generated reports)
+output/
 
 # Backup archives
 backup/*.tar.gz
