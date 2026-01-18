@@ -9,6 +9,25 @@ import os
 from typing import Dict
 
 
+def _remove_slide_placeholders(slide) -> None:
+    """
+    Полностью удаляет все placeholder-элементы со слайда.
+    Это предотвращает появление текстов вроде "Заголовок слайда".
+    """
+    # Получаем доступ к XML-дереву слайда
+    sp_tree = slide.shapes._spTree
+    
+    # Собираем список placeholder-элементов для удаления
+    placeholders_to_remove = []
+    for shape in slide.shapes:
+        if shape.is_placeholder:
+            placeholders_to_remove.append(shape)
+    
+    # Удаляем каждый placeholder из XML-дерева
+    for ph in placeholders_to_remove:
+        sp_tree.remove(ph._element)
+
+
 def build_pptx(context: Dict, output_pptx: str) -> None:
     """
     Создаёт PowerPoint презентацию с аналитическим отчётом.
@@ -38,7 +57,23 @@ def build_pptx(context: Dict, output_pptx: str) -> None:
         if context.get('top_items_png') and os.path.exists(context['top_items_png']):
             _add_top_items_slide(prs, context)
         
-        # 5. Слайд с таблицей топ позиций
+        # 5. Слайд с количеством записей по дате
+        if context.get('daily_count_png') and os.path.exists(context['daily_count_png']):
+            _add_chart_slide(prs, context['daily_count_png'], 'Количество записей по дате')
+        
+        # 6. Слайд с месячными продажами
+        if context.get('monthly_sales_png') and os.path.exists(context['monthly_sales_png']):
+            _add_chart_slide(prs, context['monthly_sales_png'], 'Продажи по месяцам')
+        
+        # 7. Слайд с накопленными продажами
+        if context.get('cumulative_png') and os.path.exists(context['cumulative_png']):
+            _add_chart_slide(prs, context['cumulative_png'], 'Накопленные продажи')
+        
+        # 8. Слайд с распределением
+        if context.get('distribution_png') and os.path.exists(context['distribution_png']):
+            _add_chart_slide(prs, context['distribution_png'], 'Распределение сумм продаж')
+        
+        # 9. Слайд с таблицей топ позиций
         top_items = context.get('top_items')
         if top_items is not None and len(top_items) > 0:
             _add_top_items_table_slide(prs, context)
@@ -97,6 +132,7 @@ def _add_timeseries_slide(prs: Presentation, context: Dict) -> None:
     """Добавляет слайд с графиком динамики продаж."""
     slide_layout = prs.slide_layouts[5]  # Пустой слайд
     slide = prs.slides.add_slide(slide_layout)
+    _remove_slide_placeholders(slide)
     
     # Добавляем заголовок
     title_shape = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9), Inches(1))
@@ -120,6 +156,7 @@ def _add_top_items_slide(prs: Presentation, context: Dict) -> None:
     """Добавляет слайд с графиком топ позиций."""
     slide_layout = prs.slide_layouts[5]  # Пустой слайд
     slide = prs.slides.add_slide(slide_layout)
+    _remove_slide_placeholders(slide)
     
     # Добавляем заголовок
     title_shape = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9), Inches(1))
@@ -130,6 +167,36 @@ def _add_top_items_slide(prs: Presentation, context: Dict) -> None:
     
     # Добавляем изображение
     img_path = context['top_items_png']
+    if os.path.exists(img_path):
+        slide.shapes.add_picture(
+            img_path, 
+            Inches(0.5), Inches(1.5), 
+            width=Inches(9), 
+            height=Inches(5)
+        )
+
+
+def _add_chart_slide(prs: Presentation, img_path: str, title: str) -> None:
+    """
+    Добавляет универсальный слайд с графиком.
+    
+    Args:
+        prs: Объект презентации
+        img_path: Путь к изображению графика
+        title: Заголовок слайда
+    """
+    slide_layout = prs.slide_layouts[5]  # Пустой слайд
+    slide = prs.slides.add_slide(slide_layout)
+    _remove_slide_placeholders(slide)
+    
+    # Добавляем заголовок
+    title_shape = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9), Inches(1))
+    title_frame = title_shape.text_frame
+    title_frame.text = title
+    title_frame.paragraphs[0].font.size = Pt(24)
+    title_frame.paragraphs[0].font.bold = True
+    
+    # Добавляем изображение
     if os.path.exists(img_path):
         slide.shapes.add_picture(
             img_path, 
@@ -151,6 +218,7 @@ def _add_top_items_table_slide(prs: Presentation, context: Dict) -> None:
         # Первый слайд
         slide_layout = prs.slide_layouts[5]  # Пустой слайд
         slide1 = prs.slides.add_slide(slide_layout)
+        _remove_slide_placeholders(slide1)
         
         # Заголовок первого слайда
         title_shape1 = slide1.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9), Inches(1))
@@ -185,6 +253,7 @@ def _add_top_items_table_slide(prs: Presentation, context: Dict) -> None:
         # Второй слайд (если есть вторая половина)
         if second_half:
             slide2 = prs.slides.add_slide(slide_layout)
+            _remove_slide_placeholders(slide2)
             
             # Заголовок второго слайда
             title_shape2 = slide2.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9), Inches(1))

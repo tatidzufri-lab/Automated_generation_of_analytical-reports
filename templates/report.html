@@ -50,6 +50,34 @@
                     <img src="{{ top_items_png }}" alt="График топ позиций" class="chart-image">
                 </div>
                 {% endif %}
+                
+                {% if daily_count_png %}
+                <div class="chart-container">
+                    <h3>Количество записей по дате</h3>
+                    <img src="{{ daily_count_png }}" alt="График количества записей" class="chart-image">
+                </div>
+                {% endif %}
+                
+                {% if monthly_sales_png %}
+                <div class="chart-container">
+                    <h3>Продажи по месяцам</h3>
+                    <img src="{{ monthly_sales_png }}" alt="График продаж по месяцам" class="chart-image">
+                </div>
+                {% endif %}
+                
+                {% if cumulative_png %}
+                <div class="chart-container">
+                    <h3>Накопленные продажи</h3>
+                    <img src="{{ cumulative_png }}" alt="График накопленных продаж" class="chart-image">
+                </div>
+                {% endif %}
+                
+                {% if distribution_png %}
+                <div class="chart-container">
+                    <h3>Распределение сумм</h3>
+                    <img src="{{ distribution_png }}" alt="Гистограмма распределения" class="chart-image">
+                </div>
+                {% endif %}
             </div>
         </section>
 

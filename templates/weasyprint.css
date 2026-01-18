@@ -27,69 +27,111 @@ body {
     padding: 0;
 }
 
-/* Заголовки */
+/* Заголовки - ультракомпактные для 1 страницы */
+.header {
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid #2E86AB;
+}
+
 .header h1 {
-    font-size: 24px;
-    margin-bottom: 10px;
+    font-size: 18px;
+    margin-bottom: 2px;
     page-break-after: avoid;
+    color: #2E86AB;
 }
 
 .generated-date {
-    font-size: 12px;
-    margin-bottom: 20px;
+    font-size: 9px;
+    margin-bottom: 0;
     page-break-after: avoid;
+    color: #666;
+}
+
+section {
+    margin-bottom: 6px;
 }
 
 section h2 {
-    font-size: 16px;
-    margin-bottom: 15px;
+    font-size: 11px;
+    margin-bottom: 5px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #A23B72;
     page-break-after: avoid;
     page-break-inside: avoid;
+    color: #2E86AB;
 }
 
-/* Метрики */
+/* Метрики - ультракомпактные */
+.metrics-section {
+    margin-bottom: 6px;
+}
+
 .metrics-grid {
     display: table;
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 6px;
     page-break-inside: avoid;
 }
 
 .metric-card {
     display: table-cell;
     width: 33.33%;
-    padding: 15px;
+    padding: 5px;
     text-align: center;
-    vertical-align: top;
+    vertical-align: middle;
     page-break-inside: avoid;
     border: 1px solid #ddd;
-    margin-right: 10px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
-.metric-card:last-child {
-    margin-right: 0;
+.metric-card h3 {
+    font-size: 8px;
+    margin-bottom: 2px;
+    color: #495057;
 }
 
 .metric-value {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: bold;
     color: #2E86AB;
+    margin: 0;
 }
 
-/* Графики */
+/* Графики - 2 на первой странице, остальные на второй */
+.charts-section {
+    page-break-inside: auto;
+}
+
 .charts-grid {
-    page-break-inside: avoid;
-    margin-bottom: 20px;
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    page-break-inside: auto;
 }
 
 .chart-container {
-    page-break-inside: avoid;
+    display: block;
+    width: 100%;
     margin-bottom: 15px;
+    page-break-inside: avoid;
+}
+
+.chart-container h3 {
+    font-size: 11px;
+    margin-bottom: 5px;
+    color: #2E86AB;
+    text-align: left;
+    font-weight: bold;
 }
 
 .chart-image {
     max-width: 100%;
+    max-height: 220px;
+    width: 100%;
     height: auto;
+    display: block;
+    margin: 0 auto;
     page-break-inside: avoid;
 }
 

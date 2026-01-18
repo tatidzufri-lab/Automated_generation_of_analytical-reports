@@ -10,7 +10,15 @@ from typing import Optional
 
 # Импорты модулей проекта
 from data_types import read_table, enforce_types
-from analysis import compute_metrics, plot_time_series, plot_top_items
+from analysis import (
+    compute_metrics, 
+    plot_time_series, 
+    plot_top_items,
+    plot_daily_count,
+    plot_monthly_sales,
+    plot_cumulative_sales,
+    plot_distribution
+)
 from build_pdf import build_pdf
 from build_pptx import build_pptx
 
@@ -116,14 +124,40 @@ def main():
         print("🔄 Построение графиков...")
         timeseries_png = None
         top_items_png = None
+        daily_count_png = None
+        monthly_sales_png = None
+        cumulative_png = None
+        distribution_png = None
         
+        # 1. График динамики продаж
         if not metrics['time_series'].empty:
             timeseries_png = plot_time_series(metrics['time_series'], 'output/timeseries.png')
             print(f"✅ График динамики сохранён: {timeseries_png}")
         
+        # 2. График топ позиций
         if not metrics['top_items'].empty:
             top_items_png = plot_top_items(metrics['top_items'], 'output/top_items.png')
             print(f"✅ График топ позиций сохранён: {top_items_png}")
+        
+        # 3. График количества записей по дате
+        daily_count_png = plot_daily_count(df, args.datecol, 'output/daily_count.png')
+        if daily_count_png:
+            print(f"✅ График количества записей сохранён: {daily_count_png}")
+        
+        # 4. График месячных продаж
+        monthly_sales_png = plot_monthly_sales(df, args.datecol, args.amountcol, 'output/monthly_sales.png')
+        if monthly_sales_png:
+            print(f"✅ График месячных продаж сохранён: {monthly_sales_png}")
+        
+        # 5. График накопленных продаж
+        cumulative_png = plot_cumulative_sales(df, args.datecol, args.amountcol, 'output/cumulative.png')
+        if cumulative_png:
+            print(f"✅ График накопленных продаж сохранён: {cumulative_png}")
+        
+        # 6. Гистограмма распределения
+        distribution_png = plot_distribution(df, args.amountcol, 'output/distribution.png')
+        if distribution_png:
+            print(f"✅ Гистограмма распределения сохранена: {distribution_png}")
         
         # Подготавливаем контекст для шаблонов
         context = {
@@ -135,6 +169,10 @@ def main():
             'top_items': metrics['top_items'].to_dict('records') if not metrics['top_items'].empty else [],
             'timeseries_png': timeseries_png,
             'top_items_png': top_items_png,
+            'daily_count_png': daily_count_png,
+            'monthly_sales_png': monthly_sales_png,
+            'cumulative_png': cumulative_png,
+            'distribution_png': distribution_png,
             'sample_rows': df.head(10).to_dict('records')  # Первые 10 строк для примера
         }
         
@@ -154,12 +192,17 @@ def main():
         
         print("\n🎉 Генерация отчётов завершена успешно!")
         
+        # Считаем количество сгенерированных графиков
+        charts_count = sum(1 for chart in [timeseries_png, top_items_png, daily_count_png, 
+                                           monthly_sales_png, cumulative_png, distribution_png] if chart)
+        
         # Выводим краткую сводку
         print(f"\n📊 Краткая сводка:")
         print(f"   • Общая сумма продаж: {metrics['total_sales']:,.2f} руб.")
         print(f"   • Средний чек: {metrics['avg_ticket']:,.2f} руб.")
         print(f"   • Количество заказов: {metrics['total_orders']:,}")
         print(f"   • Топ позиций: {len(metrics['top_items'])}")
+        print(f"   • Сгенерировано графиков: {charts_count}")
         
     except Exception as e:
         print(f"❌ Ошибка: {str(e)}")
