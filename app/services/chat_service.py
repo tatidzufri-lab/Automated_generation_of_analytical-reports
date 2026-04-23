@@ -16,7 +16,10 @@ from app.services.analysis_service import AnalysisService
 from app.services.chart_service import ChartService
 from app.services.export_service import ExportService
 from app.services.file_service import FileService, FileServiceError, StoredFile
+from app.services.pdf_service import PdfService, PdfServiceError
+from app.services.pptx_service import PptxService, PptxServiceError
 from app.services.report_service import ReportService
+from app.services.time_utils import format_local
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +34,7 @@ def _utc_now() -> str:
 
 
 def _time_label(iso_value: str) -> str:
-    return datetime.fromisoformat(iso_value).astimezone(UTC).strftime("%H:%M UTC")
+    return format_local("%H:%M", datetime.fromisoformat(iso_value))
 
 
 class ChatService:
@@ -43,6 +46,8 @@ class ChatService:
         report_service: ReportService,
         export_service: ExportService,
         ai_service: AIService,
+        pdf_service: PdfService,
+        pptx_service: PptxService,
         settings: Settings | None = None,
     ) -> None:
         self.file_service = file_service
@@ -51,6 +56,8 @@ class ChatService:
         self.report_service = report_service
         self.export_service = export_service
         self.ai_service = ai_service
+        self.pdf_service = pdf_service
+        self.pptx_service = pptx_service
         self.settings = settings or get_settings()
         self.chat_dir = self.settings.storage_dir / "chats"
 
@@ -243,17 +250,77 @@ class ChatService:
                         preview_cache = self.file_service.build_preview_context(active_file)
                     if analysis_cache is None:
                         analysis_cache = self.analysis_service.analyze(active_file)
-                    chart_records = self.file_service.get_output_artifacts(active_file.file_id)["charts"]
-                    if not chart_records:
-                        self.chart_service.generate_default_charts(active_file)
-                        chart_records = self.file_service.get_output_artifacts(active_file.file_id)["charts"]
+                    business = self._safe_business_metrics(active_file)
+                    chart_records = self._ensure_business_charts(active_file, business)
                     report = self.report_service.generate_report(
                         active_file,
                         analysis_cache,
                         chart_records[:3],
                         preview_cache,
+                        business_metrics=business,
                     )
                     assistant_message["attachments"].append(self._artifact_chip(report, "report"))
+                elif action_type == "generate_pdf":
+                    if analysis_cache is None:
+                        analysis_cache = self.analysis_service.analyze(active_file)
+                    business = self._safe_business_metrics(active_file)
+                    chart_records = self._ensure_business_charts(active_file, business)
+                    try:
+                        pdf = self.pdf_service.generate_report(
+                            active_file,
+                            analysis_cache,
+                            business,
+                            chart_records[:6],
+                        )
+                        assistant_message["attachments"].append(self._artifact_chip(pdf, "pdf"))
+                    except PdfServiceError as exc:
+                        notes.append(f"Не удалось собрать PDF: {exc}")
+                elif action_type == "generate_pptx":
+                    if analysis_cache is None:
+                        analysis_cache = self.analysis_service.analyze(active_file)
+                    business = self._safe_business_metrics(active_file)
+                    chart_records = self._ensure_business_charts(active_file, business)
+                    try:
+                        pptx = self.pptx_service.generate_report(
+                            active_file,
+                            analysis_cache,
+                            business,
+                            chart_records[:6],
+                        )
+                        assistant_message["attachments"].append(self._artifact_chip(pptx, "pptx"))
+                    except PptxServiceError as exc:
+                        notes.append(f"Не удалось собрать PPTX: {exc}")
+                elif action_type == "generate_business_report":
+                    if preview_cache is None:
+                        preview_cache = self.file_service.build_preview_context(active_file)
+                    if analysis_cache is None:
+                        analysis_cache = self.analysis_service.analyze(active_file)
+                    business = self._safe_business_metrics(active_file)
+                    chart_records = self.chart_service.generate_business_charts(active_file)
+                    if not chart_records:
+                        chart_records = self._ensure_business_charts(active_file, business)
+                    for chart in chart_records[:6]:
+                        assistant_message["attachments"].append(self._artifact_chip(chart, "chart"))
+                    try:
+                        pdf = self.pdf_service.generate_report(
+                            active_file,
+                            analysis_cache,
+                            business,
+                            chart_records[:6],
+                        )
+                        assistant_message["attachments"].append(self._artifact_chip(pdf, "pdf"))
+                    except PdfServiceError as exc:
+                        notes.append(f"PDF не удалось сгенерировать: {exc}")
+                    try:
+                        pptx = self.pptx_service.generate_report(
+                            active_file,
+                            analysis_cache,
+                            business,
+                            chart_records[:6],
+                        )
+                        assistant_message["attachments"].append(self._artifact_chip(pptx, "pptx"))
+                    except PptxServiceError as exc:
+                        notes.append(f"PPTX не удалось сгенерировать: {exc}")
                 elif action_type == "save_summary":
                     if analysis_cache is None:
                         analysis_cache = self.analysis_service.analyze(active_file)
@@ -271,6 +338,30 @@ class ChatService:
 
         if notes:
             assistant_message["text"] = assistant_message["text"].rstrip() + "\n\n" + "\n".join(notes)
+
+    def _safe_business_metrics(self, stored_file: StoredFile) -> dict[str, Any] | None:
+        if stored_file.kind != "table":
+            return None
+        try:
+            return self.analysis_service.compute_business_metrics(stored_file)
+        except (ValueError, FileServiceError) as exc:
+            logger.info("Business metrics not available for %s: %s", stored_file.file_id, exc)
+            return None
+
+    def _ensure_business_charts(
+        self,
+        stored_file: StoredFile,
+        business_metrics: dict[str, Any] | None,
+    ) -> list[dict[str, Any]]:
+        chart_records = self.file_service.get_output_artifacts(stored_file.file_id)["charts"]
+        if chart_records:
+            return chart_records
+        if stored_file.kind == "table" and business_metrics and business_metrics.get("has_business_context"):
+            business_charts = self.chart_service.generate_business_charts(stored_file)
+            if business_charts:
+                return self.file_service.get_output_artifacts(stored_file.file_id)["charts"]
+        self.chart_service.generate_default_charts(stored_file)
+        return self.file_service.get_output_artifacts(stored_file.file_id)["charts"]
 
     def _attach_uploaded_file(
         self,
@@ -392,11 +483,11 @@ class ChatService:
             try:
                 preview = self.file_service.build_preview_context(active_file)
                 analysis = self.analysis_service.analyze(active_file)
-                chart_records = self.file_service.get_output_artifacts(active_file.file_id)["charts"]
-                if not chart_records:
-                    self.chart_service.generate_default_charts(active_file)
-                    chart_records = self.file_service.get_output_artifacts(active_file.file_id)["charts"]
-                report = self.report_service.generate_report(active_file, analysis, chart_records[:3], preview)
+                business = self._safe_business_metrics(active_file)
+                chart_records = self._ensure_business_charts(active_file, business)
+                report = self.report_service.generate_report(
+                    active_file, analysis, chart_records[:3], preview, business_metrics=business
+                )
             except FileServiceError as exc:
                 return self._new_message("assistant", f"Не удалось собрать отчёт: {exc}")
 
@@ -404,6 +495,57 @@ class ChatService:
                 "assistant",
                 f"DOCX-отчёт для файла «{active_file.original_name}» готов. Его можно открыть или скачать.",
                 attachments=[self._artifact_chip(report, "report")],
+            )
+
+        if action == "pdf":
+            try:
+                analysis = self.analysis_service.analyze(active_file)
+                business = self._safe_business_metrics(active_file)
+                chart_records = self._ensure_business_charts(active_file, business)
+                pdf = self.pdf_service.generate_report(active_file, analysis, business, chart_records[:6])
+            except (FileServiceError, PdfServiceError) as exc:
+                return self._new_message("assistant", f"Не удалось собрать PDF: {exc}")
+
+            return self._new_message(
+                "assistant",
+                f"PDF-отчёт для файла «{active_file.original_name}» готов. Скачайте файл ниже.",
+                attachments=[self._artifact_chip(pdf, "pdf")],
+            )
+
+        if action == "pptx":
+            try:
+                analysis = self.analysis_service.analyze(active_file)
+                business = self._safe_business_metrics(active_file)
+                chart_records = self._ensure_business_charts(active_file, business)
+                pptx = self.pptx_service.generate_report(active_file, analysis, business, chart_records[:6])
+            except (FileServiceError, PptxServiceError) as exc:
+                return self._new_message("assistant", f"Не удалось собрать PPTX: {exc}")
+
+            return self._new_message(
+                "assistant",
+                f"PowerPoint презентация для файла «{active_file.original_name}» готова.",
+                attachments=[self._artifact_chip(pptx, "pptx")],
+            )
+
+        if action == "business":
+            try:
+                analysis = self.analysis_service.analyze(active_file)
+                business = self._safe_business_metrics(active_file)
+                chart_records = self.chart_service.generate_business_charts(active_file)
+                if not chart_records:
+                    chart_records = self._ensure_business_charts(active_file, business)
+                pdf = self.pdf_service.generate_report(active_file, analysis, business, chart_records[:6])
+                pptx = self.pptx_service.generate_report(active_file, analysis, business, chart_records[:6])
+            except (FileServiceError, PdfServiceError, PptxServiceError) as exc:
+                return self._new_message("assistant", f"Не удалось собрать бизнес-отчёт: {exc}")
+
+            attachments = [self._artifact_chip(chart, "chart") for chart in chart_records[:6]]
+            attachments.append(self._artifact_chip(pdf, "pdf"))
+            attachments.append(self._artifact_chip(pptx, "pptx"))
+            return self._new_message(
+                "assistant",
+                "Собрал бизнес-пакет: набор графиков, PDF-отчёт и PowerPoint-презентацию.",
+                attachments=attachments,
             )
 
         analysis = self.analysis_service.analyze(active_file)
@@ -499,10 +641,13 @@ class ChatService:
         return payload
 
     def _artifact_chip(self, artifact: dict[str, Any], kind: str) -> dict[str, Any]:
+        from app.services.artifact_naming import humanize_artifact_name
+
+        display_name = artifact.get("display_name") or humanize_artifact_name(artifact["file_name"])
         return {
-            "title": artifact.get("title", artifact.get("file_name", "Файл")),
+            "title": artifact.get("title", display_name),
             "kind": kind,
-            "name": artifact["file_name"],
+            "name": display_name,
             "description": artifact.get("description", ""),
             "storage_url": artifact.get("storage_url"),
             "download_url": artifact.get("download_url"),
@@ -548,6 +693,12 @@ class ChatService:
         )
 
     def _detect_action(self, normalized: str) -> str:
+        if any(token in normalized for token in ("бизнес-отч", "business report", "полный отчёт", "презентацию и pdf")):
+            return "business"
+        if any(token in normalized for token in ("pdf", "пдф")):
+            return "pdf"
+        if any(token in normalized for token in ("pptx", "powerpoint", "презентац", "слайд")):
+            return "pptx"
         if any(token in normalized for token in ("граф", "chart", "plot", "hist", "bar", "line", "диаграм")):
             return "chart"
         if any(token in normalized for token in ("отч", "report", "docx")):
@@ -561,6 +712,18 @@ class ChatService:
         return "help"
 
     def _detect_chart_type(self, normalized: str) -> str:
+        if any(token in normalized for token in ("time", "динам", "time_series")):
+            return "time_series"
+        if any(token in normalized for token in ("топ", "top")):
+            return "top_items"
+        if any(token in normalized for token in ("куму", "накоп", "cumul")):
+            return "cumulative"
+        if any(token in normalized for token in ("месяц", "month")):
+            return "monthly_sales"
+        if any(token in normalized for token in ("день", "дней", "daily")):
+            return "daily_count"
+        if any(token in normalized for token in ("распред", "distribut")):
+            return "distribution"
         if any(token in normalized for token in ("hist", "гист")):
             return "histogram"
         if any(token in normalized for token in ("line", "лине")):
@@ -582,7 +745,7 @@ class ChatService:
                 download_url = attachment.get("download_url")
                 if not download_url or download_url in seen:
                     continue
-                if attachment.get("kind") not in {"chart", "report", "export"}:
+                if attachment.get("kind") not in {"chart", "report", "export", "pdf", "pptx"}:
                     continue
                 saved.append(attachment)
                 seen.add(download_url)

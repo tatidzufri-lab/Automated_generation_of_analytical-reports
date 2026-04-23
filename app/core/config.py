@@ -41,6 +41,7 @@ class Settings:
     openai_api_key: str | None
     openai_model: str
     openai_max_history_messages: int
+    timezone: str
 
 
 @lru_cache
@@ -48,7 +49,7 @@ def get_settings() -> Settings:
     upload_dir = BASE_DIR / os.getenv("UPLOAD_DIR", "storage/uploads")
     output_dir = BASE_DIR / os.getenv("OUTPUT_DIR", "storage/outputs")
     return Settings(
-        app_name=os.getenv("APP_NAME", "Data Assistant"),
+        app_name=os.getenv("APP_NAME", "Analytics Assistant"),
         app_host=os.getenv("APP_HOST", "0.0.0.0"),
         app_port=int(os.getenv("APP_PORT", "8000")),
         max_file_size=os.getenv("MAX_FILE_SIZE", "10MB"),
@@ -62,4 +63,5 @@ def get_settings() -> Settings:
         openai_api_key=os.getenv("OPENAI_API_KEY"),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-5-mini"),
         openai_max_history_messages=int(os.getenv("OPENAI_MAX_HISTORY_MESSAGES", "8")),
+        timezone=os.getenv("APP_TIMEZONE", "Europe/Moscow"),
     )

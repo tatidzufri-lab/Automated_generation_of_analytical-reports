@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from app.core.config import Settings, get_settings
+from app.services.artifact_naming import humanize_artifact_name
 from app.services.file_service import StoredFile
+from app.services.time_utils import filename_timestamp, format_local
 
 
 class ExportService:
@@ -28,7 +29,7 @@ class ExportService:
             "# AI Chat Summary",
             "",
             f"- Conversation ID: `{conversation_id}`",
-            f"- Generated at: {datetime.now(tz=UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}",
+            f"- Generated at: {format_local('%d.%m.%Y %H:%M')}",
         ]
 
         if stored_file:
@@ -59,7 +60,12 @@ class ExportService:
 
         if charts:
             lines.extend(["", "## Saved Charts", ""])
-            lines.extend([f"- `{chart['file_name']}`" for chart in charts])
+            lines.extend(
+                [
+                    f"- {chart.get('display_name') or humanize_artifact_name(chart['file_name'])}"
+                    for chart in charts
+                ]
+            )
 
         transcript = messages[-8:]
         if transcript:
@@ -77,12 +83,12 @@ class ExportService:
             "title": "Markdown summary",
             "kind": "export",
             "file_name": file_name,
+            "display_name": humanize_artifact_name(file_name),
             "storage_url": f"/storage/outputs/{file_name}",
             "download_url": f"/download/{file_name}",
             "description": "Markdown-файл с краткой сводкой и последними сообщениями чата.",
         }
 
     def _build_file_name(self, conversation_id: str) -> str:
-        timestamp = datetime.now(tz=UTC).strftime("%Y%m%d%H%M%S")
         safe_prefix = Path(conversation_id).name
-        return f"{safe_prefix}__summary__{timestamp}.md"
+        return f"{safe_prefix}__summary__{filename_timestamp()}.md"

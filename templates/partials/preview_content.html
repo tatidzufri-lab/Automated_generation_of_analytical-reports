@@ -1,38 +1,193 @@
-<section id="page-shell" class="page-stack">
-    <div class="section-head">
-        <div>
-            <p class="eyebrow">Preview</p>
-            <h1>{{ preview.file.original_name }}</h1>
-            <p class="subtle">
-                Тип: {{ preview.kind }} · Размер: {{ preview.file_size_kb }} KB · Загружен: {{ preview.file.created_at }}
+{% set analysis_done = analysis is not none %}
+{% set has_reports = artifacts and (artifacts.reports or artifacts.presentations) %}
+
+<section id="page-shell" class="chat-layout">
+    <aside class="side-rail">
+        <section class="panel rail-section">
+            <h2>Шаг 1 · Файл</h2>
+            <div class="context-card">
+                <div class="context-card__title">
+                    <strong>{{ preview.file.original_name }}</strong>
+                    <span>{{ preview.kind }}</span>
+                </div>
+                <div class="preview-meta">
+                    <span>{{ preview.file_size_kb }} KB</span>
+                    {% if preview.kind == "table" %}
+                        <span>{{ preview.row_count }} строк</span>
+                        <span>{{ preview.column_count }} колонок</span>
+                    {% else %}
+                        <span>{{ preview.image_width }}×{{ preview.image_height }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <a class="ghost-btn wide-btn" href="/" hx-get="/" hx-target="#page-shell" hx-swap="outerHTML" hx-push-url="true" style="margin-top: 0.7rem;">← Загрузить другой файл</a>
+        </section>
+
+        <section class="panel rail-section {% if not analysis_done %}rail-section--primary{% endif %}">
+            <h2>Шаг 2 · Анализ</h2>
+            {% if analysis_done %}
+                <div class="status-banner status-banner--success" style="margin-bottom: 0.7rem;">
+                    <span class="status-banner__icon">✓</span>
+                    <div class="status-banner__text"><strong>Анализ выполнен</strong></div>
+                </div>
+                <form class="action-form" hx-post="/actions/analyze/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="Обновляем анализ…">
+                    <button class="ghost-btn wide-btn" type="submit">Пересчитать анализ</button>
+                </form>
+            {% else %}
+                <p class="muted-note" style="margin-bottom: 0.7rem;">
+                    Запустите анализ, чтобы собрать бизнес-метрики и графики. После этого появятся кнопки для скачивания отчётов.
+                </p>
+                <form class="action-form" hx-post="/actions/analyze/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="Анализируем данные и строим графики…" data-loading-subtitle="Подсчёт метрик и генерация PNG занимают несколько секунд">
+                    <button class="cta-btn wide-btn" type="submit">🔍 Запустить анализ</button>
+                </form>
+            {% endif %}
+        </section>
+
+        {% if analysis_done %}
+            <section class="panel rail-section rail-section--primary">
+                <h2>Шаг 3 · Скачать отчёт</h2>
+                <p class="muted-note" style="margin-bottom: 0.7rem;">
+                    Выберите формат — файл соберётся в пару секунд и появится в блоке результатов справа.
+                </p>
+
+                <form class="action-form" hx-post="/actions/pdf/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="Собираем PDF-отчёт…">
+                    <button class="primary-btn wide-btn" type="submit">📄 PDF-отчёт</button>
+                </form>
+
+                {% if preview.kind == "table" %}
+                <form class="action-form" hx-post="/actions/pptx/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="Собираем PowerPoint-презентацию…">
+                    <button class="primary-btn wide-btn" type="submit">📊 PowerPoint</button>
+                </form>
+                {% endif %}
+
+                <form class="action-form" hx-post="/actions/report/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="Формируем DOCX…">
+                    <button class="ghost-btn wide-btn" type="submit">📝 DOCX-отчёт</button>
+                </form>
+
+                {% if preview.kind == "table" %}
+                <form class="action-form" hx-post="/actions/business/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="Собираем полный бизнес-пакет…" data-loading-subtitle="Графики, PDF и PowerPoint — одним нажатием">
+                    <button class="cta-btn wide-btn" type="submit" style="margin-top: 0.4rem;">🚀 Полный пакет (PDF + PPTX)</button>
+                </form>
+                {% endif %}
+            </section>
+        {% endif %}
+
+        {% if analysis_done and preview.kind == "table" %}
+            <section class="panel rail-section">
+                <h2>Дополнительно</h2>
+                <details>
+                    <summary>Построить отдельный график</summary>
+                    <form class="action-form" hx-post="/actions/chart/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="Строим график…" style="margin-top: 0.7rem;">
+                        <label>
+                            <span>Тип</span>
+                            <select name="chart_type">
+                                <optgroup label="Бизнес-графики">
+                                    <option value="time_series">Динамика продаж</option>
+                                    <option value="top_items">Топ позиций</option>
+                                    <option value="daily_count">Количество по дням</option>
+                                    <option value="monthly_sales">Продажи по месяцам</option>
+                                    <option value="cumulative">Накопительные продажи</option>
+                                    <option value="distribution">Распределение сумм</option>
+                                </optgroup>
+                                <optgroup label="Базовые">
+                                    <option value="line">Линейный</option>
+                                    <option value="bar">Столбчатый</option>
+                                    <option value="histogram" selected>Гистограмма</option>
+                                </optgroup>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Ось X</span>
+                            <select name="x_column">
+                                {% for column in preview.dimension_columns %}
+                                    <option value="{{ column }}" {% if column == preview.recommended_x %}selected{% endif %}>{{ column }}</option>
+                                {% endfor %}
+                                {% for column in preview.numeric_columns %}
+                                    {% if column not in preview.dimension_columns %}
+                                        <option value="{{ column }}">{{ column }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label>
+                            <span>Ось Y</span>
+                            <select name="y_column">
+                                {% for column in preview.numeric_columns %}
+                                    <option value="{{ column }}" {% if column == preview.recommended_y %}selected{% endif %}>{{ column }}</option>
+                                {% endfor %}
+                                {% if not preview.numeric_columns %}
+                                    <option value="">Auto</option>
+                                {% endif %}
+                            </select>
+                        </label>
+                        <button class="ghost-btn wide-btn" type="submit">Построить</button>
+                    </form>
+                </details>
+            </section>
+        {% endif %}
+    </aside>
+
+    <div class="chat-stage panel">
+        <div class="hero">
+            <h1>{% if analysis_done %}Результаты анализа{% else %}📊 Файл готов к обработке{% endif %}</h1>
+            <p>
+                {% if analysis_done %}
+                    Ниже — метрики, графики и исходные данные. Справа — кнопки скачивания в нужном формате.
+                {% else %}
+                    Нажмите <strong>«Запустить анализ»</strong> слева, чтобы получить бизнес-метрики, графики и возможность сохранить отчёт в PDF, DOCX или PowerPoint.
+                {% endif %}
             </p>
         </div>
-        <div class="head-actions">
-            <a class="ghost-btn" href="/" hx-get="/" hx-target="#page-shell" hx-swap="outerHTML" hx-push-url="true">Новый файл</a>
-            <a class="secondary-btn" href="/results/{{ preview.file.file_id }}" hx-get="/results/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" hx-push-url="true">Открыть страницу результатов</a>
+
+        {% if error_message %}
+            <div class="status-banner status-banner--danger">
+                <span class="status-banner__icon">!</span>
+                <div class="status-banner__text">{{ error_message }}</div>
+            </div>
+        {% endif %}
+
+        <div class="status-stack">
+            <div class="status-banner status-banner--success">
+                <span class="status-banner__icon">✓</span>
+                <div class="status-banner__text">
+                    {% if preview.kind == "table" %}
+                        <strong>Загружено {{ preview.row_count }} записей</strong> из файла {{ preview.file.original_name }}
+                    {% else %}
+                        <strong>Загружено изображение</strong> {{ preview.image_width }}×{{ preview.image_height }} ({{ preview.image_format }})
+                    {% endif %}
+                </div>
+            </div>
+            {% if preview.kind == "table" and preview.numeric_columns %}
+                <div class="status-banner status-banner--info">
+                    <span class="status-banner__icon">i</span>
+                    <div class="status-banner__text">
+                        <strong>Найдены числовые колонки:</strong> {{ preview.numeric_columns|join(", ") }}
+                    </div>
+                </div>
+            {% endif %}
+            {% if success_message %}
+                <div class="status-banner status-banner--success">
+                    <span class="status-banner__icon">✓</span>
+                    <div class="status-banner__text">{{ success_message }}</div>
+                </div>
+            {% endif %}
         </div>
-    </div>
 
-    {% if error_message %}
-        <div class="alert alert-error">{{ error_message }}</div>
-    {% endif %}
-    {% if success_message %}
-        <div class="alert alert-success">{{ success_message }}</div>
-    {% endif %}
-
-    <div class="workspace-grid">
-        <article class="panel preview-panel">
+        <article class="panel" style="margin-top: 0.5rem;">
             <div class="card-heading">
-                <h2>Данные</h2>
-                <p>Первые строки или визуальный preview файла.</p>
+                <div>
+                    <h2>Предпросмотр данных</h2>
+                    <p>
+                        {% if preview.kind == "table" %}
+                            Первые строки файла и профиль колонок.
+                        {% else %}
+                            Загруженное изображение.
+                        {% endif %}
+                    </p>
+                </div>
             </div>
 
             {% if preview.kind == "table" %}
-                <div class="stats-strip">
-                    <span>{{ preview.row_count }} строк</span>
-                    <span>{{ preview.column_count }} колонок</span>
-                    <span>{{ preview.numeric_columns|length }} numeric</span>
-                </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
@@ -53,16 +208,6 @@
                         </tbody>
                     </table>
                 </div>
-
-                <div class="profile-grid">
-                    {% for column in preview.columns %}
-                        <div class="profile-card">
-                            <strong>{{ column.name }}</strong>
-                            <span>{{ column.kind }} / {{ column.dtype }}</span>
-                            <small>NaN: {{ column.missing }} · sample: {{ column.sample }}</small>
-                        </div>
-                    {% endfor %}
-                </div>
             {% else %}
                 <div class="image-preview">
                     <img src="{{ preview.storage_url }}" alt="{{ preview.file.original_name }}">
@@ -75,61 +220,6 @@
             {% endif %}
         </article>
 
-        <aside class="panel action-panel">
-            <div class="card-heading">
-                <h2>Действия</h2>
-                <p>HTMX обновляет блок результатов без полной перезагрузки.</p>
-            </div>
-
-            <form class="action-form" hx-post="/actions/analyze/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML">
-                <button class="primary-btn wide-btn" type="submit">Анализировать</button>
-            </form>
-
-            <form class="action-form" hx-post="/actions/chart/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML">
-                <label>
-                    <span>Тип графика</span>
-                    <select name="chart_type">
-                        <option value="line">line</option>
-                        <option value="bar">bar</option>
-                        <option value="histogram" selected>histogram</option>
-                    </select>
-                </label>
-
-                {% if preview.kind == "table" %}
-                    <label>
-                        <span>X column</span>
-                        <select name="x_column">
-                            {% for column in preview.dimension_columns %}
-                                <option value="{{ column }}" {% if column == preview.recommended_x %}selected{% endif %}>{{ column }}</option>
-                            {% endfor %}
-                            {% for column in preview.numeric_columns %}
-                                {% if column not in preview.dimension_columns %}
-                                    <option value="{{ column }}">{{ column }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </label>
-                    <label>
-                        <span>Y column</span>
-                        <select name="y_column">
-                            {% for column in preview.numeric_columns %}
-                                <option value="{{ column }}" {% if column == preview.recommended_y %}selected{% endif %}>{{ column }}</option>
-                            {% endfor %}
-                            {% if not preview.numeric_columns %}
-                                <option value="">Auto</option>
-                            {% endif %}
-                        </select>
-                    </label>
-                {% endif %}
-
-                <button class="secondary-btn wide-btn" type="submit">Построить график</button>
-            </form>
-
-            <form class="action-form" hx-post="/actions/report/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML">
-                <button class="ghost-btn wide-btn" type="submit">Сформировать отчет</button>
-            </form>
-        </aside>
+        {% include "partials/result_panel.html" %}
     </div>
-
-    {% include "partials/result_panel.html" %}
 </section>

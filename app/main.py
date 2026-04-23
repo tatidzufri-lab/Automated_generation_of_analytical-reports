@@ -21,6 +21,7 @@ settings = get_settings()
 async def lifespan(_: FastAPI):
     configure_logging()
     FileService(settings).ensure_storage()
+    (settings.storage_dir / "chats").mkdir(parents=True, exist_ok=True)
     yield
 
 

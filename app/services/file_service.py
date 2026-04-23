@@ -267,20 +267,28 @@ class FileService:
     def get_output_artifacts(self, file_id: str) -> dict[str, list[dict[str, str]]]:
         charts: list[dict[str, str]] = []
         reports: list[dict[str, str]] = []
+        presentations: list[dict[str, str]] = []
+
+        from app.services.artifact_naming import humanize_artifact_name
 
         for artifact in sorted(self.settings.output_dir.glob(f"{file_id}__*"), reverse=True):
+            display_name = humanize_artifact_name(artifact.name)
             record = {
-                "name": artifact.name,
+                "name": display_name,
+                "display_name": display_name,
                 "file_name": artifact.name,
                 "storage_url": f"/storage/outputs/{artifact.name}",
                 "download_url": f"/download/{artifact.name}",
             }
-            if artifact.suffix.lower() == ".png":
+            suffix = artifact.suffix.lower()
+            if suffix == ".png":
                 charts.append(record)
-            elif artifact.suffix.lower() in {".docx", ".pdf"}:
+            elif suffix in {".docx", ".pdf"}:
                 reports.append(record)
+            elif suffix == ".pptx":
+                presentations.append(record)
 
-        return {"charts": charts, "reports": reports}
+        return {"charts": charts, "reports": reports, "presentations": presentations}
 
     def format_value(self, value: Any) -> str:
         if value is None:

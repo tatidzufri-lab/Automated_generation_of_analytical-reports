@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>{{ title }}</h1>
+            <p class="generated-date">Сгенерирован: {{ generated_at }}</p>
+            {% if source_file %}
+                <p class="generated-date">Источник: {{ source_file }}</p>
+            {% endif %}
+        </header>
+
+        {% if has_business_metrics %}
+        <section class="metrics-section">
+            <h2>Ключевые метрики</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Общая сумма</h3>
+                    <p class="metric-value">{{ "%.2f"|format(total_sales) }}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Средний чек</h3>
+                    <p class="metric-value">{{ "%.2f"|format(avg_ticket) }}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Количество записей</h3>
+                    <p class="metric-value">{{ "{:,}".format(total_orders).replace(",", " ") }}</p>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if summary %}
+        <section class="metrics-section">
+            <h2>Общая сводка</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Строк</h3>
+                    <p class="metric-value">{{ summary.rows }}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Колонок</h3>
+                    <p class="metric-value">{{ summary.columns }}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Числовых</h3>
+                    <p class="metric-value">{{ summary.numeric_columns }}</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Пропусков</h3>
+                    <p class="metric-value">{{ summary.missing_cells }}</p>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if insights %}
+        <section>
+            <h2>Выводы</h2>
+            <ul class="insights-list">
+                {% for insight in insights %}
+                <li>{{ insight }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        {% if charts %}
+        <section class="charts-section">
+            <h2>Визуализация данных</h2>
+            <div class="charts-grid">
+                {% for chart in charts %}
+                <div class="chart-container">
+                    <h3>{{ chart.title }}</h3>
+                    <img src="{{ chart.absolute_path }}" alt="{{ chart.title }}" class="chart-image">
+                    {% if chart.description %}
+                        <p class="chart-caption">{{ chart.description }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if top_items %}
+        <section class="top-items-section">
+            <h2>Топ позиций</h2>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Позиция</th>
+                            <th>Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in top_items %}
+                        <tr>
+                            <td>{{ item.item }}</td>
+                            <td class="number">{{ "%.2f"|format(item.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if stats %}
+        <section>
+            <h2>Статистика по числовым колонкам</h2>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            {% for header in stats[0].keys() %}
+                            <th>{{ header }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in stats %}
+                        <tr>
+                            {% for value in row.values() %}
+                            <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if sample_rows %}
+        <section class="sample-data-section">
+            <h2>Первые строки данных</h2>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            {% for key in sample_rows[0].keys() %}
+                            <th>{{ key }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in sample_rows %}
+                        <tr>
+                            {% for value in row.values() %}
+                            <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+</body>
+</html>

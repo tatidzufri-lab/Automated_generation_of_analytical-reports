@@ -1,12 +1,13 @@
 <section id="page-shell" class="page-stack">
     <div class="section-head">
         <div>
-            <p class="eyebrow">Results</p>
+            <p class="eyebrow">Результаты</p>
             <h1>{{ preview.file.original_name }}</h1>
-            <p class="subtle">Сводный экран с анализом, графиками и файлами для скачивания.</p>
+            <p class="subtle">Аналитика, графики и готовые отчёты по загруженному файлу.</p>
         </div>
         <div class="head-actions">
-            <a class="ghost-btn" href="/preview/{{ preview.file.file_id }}" hx-get="/preview/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" hx-push-url="true">Вернуться к preview</a>
+            <a class="ghost-btn" href="/preview/{{ preview.file.file_id }}" hx-get="/preview/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" hx-push-url="true">← К preview и действиям</a>
+            <a class="secondary-btn" href="/" hx-get="/" hx-target="#page-shell" hx-swap="outerHTML" hx-push-url="true">Новый файл</a>
         </div>
     </div>
 

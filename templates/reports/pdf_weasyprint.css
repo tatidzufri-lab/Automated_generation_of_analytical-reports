@@ -1,0 +1,290 @@
+/* Специальные стили для WeasyPrint PDF генерации */
+
+/* Основные настройки страницы */
+@page {
+    size: A4;
+    margin: 1.5cm;
+    @bottom-center {
+        content: "Страница " counter(page);
+        font-size: 9px;
+        color: #666;
+    }
+}
+
+/* Базовые стили для PDF */
+body {
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Заголовки - ультракомпактные для 1 страницы */
+.header {
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid #2E86AB;
+}
+
+.header h1 {
+    font-size: 18px;
+    margin-bottom: 2px;
+    page-break-after: avoid;
+    color: #2E86AB;
+}
+
+.generated-date {
+    font-size: 9px;
+    margin-bottom: 0;
+    page-break-after: avoid;
+    color: #666;
+}
+
+section {
+    margin-bottom: 6px;
+}
+
+section h2 {
+    font-size: 11px;
+    margin-bottom: 5px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #A23B72;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    color: #2E86AB;
+}
+
+/* Метрики - ультракомпактные */
+.metrics-section {
+    margin-bottom: 6px;
+}
+
+.metrics-grid {
+    display: table;
+    width: 100%;
+    margin-bottom: 6px;
+    page-break-inside: avoid;
+}
+
+.metric-card {
+    display: table-cell;
+    width: 33.33%;
+    padding: 5px;
+    text-align: center;
+    vertical-align: middle;
+    page-break-inside: avoid;
+    border: 1px solid #ddd;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.metric-card h3 {
+    font-size: 8px;
+    margin-bottom: 2px;
+    color: #495057;
+}
+
+.metric-value {
+    font-size: 12px;
+    font-weight: bold;
+    color: #2E86AB;
+    margin: 0;
+}
+
+/* Графики - 2 на первой странице, остальные на второй */
+.charts-section {
+    page-break-inside: auto;
+}
+
+.charts-grid {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    page-break-inside: auto;
+}
+
+.chart-container {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+    page-break-inside: avoid;
+}
+
+.chart-container h3 {
+    font-size: 11px;
+    margin-bottom: 5px;
+    color: #2E86AB;
+    text-align: left;
+    font-weight: bold;
+}
+
+.chart-image {
+    max-width: 100%;
+    max-height: 220px;
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    page-break-inside: avoid;
+}
+
+/* Таблицы - основные улучшения */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9px;
+    page-break-inside: auto;
+    table-layout: fixed;
+    margin-bottom: 20px;
+}
+
+.data-table th {
+    background-color: #2E86AB;
+    color: white;
+    padding: 8px 6px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 9px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 1px solid #1a5f7a;
+}
+
+.data-table td {
+    padding: 6px 4px;
+    border: 1px solid #ddd;
+    vertical-align: top;
+    font-size: 8px;
+    line-height: 1.2;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* Запрещаем разрывы внутри строк */
+.data-table tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* Настройки ширины колонок */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+    width: 25%;
+}
+
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+    width: 20%;
+}
+
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+    width: 15%;
+}
+
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) {
+    width: 15%;
+}
+
+.data-table th:nth-child(5),
+.data-table td:nth-child(5) {
+    width: 15%;
+}
+
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+    width: 10%;
+}
+
+/* Стили для числовых колонок */
+.data-table .number {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #2E86AB;
+}
+
+/* Контейнеры таблиц */
+.table-container {
+    page-break-inside: auto;
+    overflow: visible;
+}
+
+/* Секции */
+.top-items-section,
+.sample-data-section {
+    page-break-inside: auto;
+    margin-bottom: 25px;
+}
+
+/* Чередующиеся строки */
+.data-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* Убираем hover эффекты для PDF */
+.data-table tr:hover {
+    background-color: inherit;
+}
+
+/* Дополнительные правила для предотвращения разрывов */
+.no-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.break-before {
+    page-break-before: always;
+    break-before: page;
+}
+
+/* Улучшения для длинного текста */
+.data-table td {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Специальные стили для заголовков таблиц */
+.data-table thead {
+    display: table-header-group;
+}
+
+.data-table tbody {
+    display: table-row-group;
+}
+
+/* Обеспечиваем, что заголовки повторяются на каждой странице */
+.data-table thead tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* Настройки для больших таблиц */
+@media print {
+    .data-table {
+        font-size: 8px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 4px 3px;
+        font-size: 8px;
+    }
+    
+    .data-table th {
+        font-size: 8px;
+        font-weight: bold;
+    }
+}

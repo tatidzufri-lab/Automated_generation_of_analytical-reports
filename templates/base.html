@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title or "AI Data Chat" }}</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <title>{{ page_title or "Analytics Assistant" }}</title>
+    <link rel="stylesheet" href="/static/css/styles.css?v=3">
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-    <script defer src="/static/js/app.js"></script>
+    <script defer src="/static/js/app.js?v=3"></script>
 </head>
 <body>
-    <div class="page-backdrop"></div>
     <header class="topbar">
         <a class="brand" href="/">
-            <span class="brand-mark">AI</span>
+            <span class="brand-mark">AA</span>
             <span>
-                <strong>AI Data Chat</strong>
-                <small>чат для файлов, графиков и отчётов</small>
+                <strong>Analytics Assistant</strong>
+                <small>Загрузка · анализ · отчёты в PDF, PPTX, DOCX</small>
             </span>
         </a>
         <nav class="topnav">
-            <a href="/">Новый чат</a>
+            <a href="/">Загрузить файл</a>
+            <a href="/chat">AI-чат</a>
         </nav>
     </header>
 
@@ -27,9 +27,14 @@
         {% block shell %}{% endblock %}
     </main>
 
-    <div id="global-loader" class="global-loader htmx-indicator">
-        <div class="loader-ring"></div>
-        <span>Выполняем запрос…</span>
+    <div id="loading-overlay" class="loading-overlay" aria-hidden="true">
+        <div class="loading-card">
+            <div class="loader-ring loader-ring--lg"></div>
+            <div>
+                <strong id="loading-title">Выполняем запрос…</strong>
+                <span id="loading-subtitle">Обычно это занимает несколько секунд</span>
+            </div>
+        </div>
     </div>
 </body>
 </html>

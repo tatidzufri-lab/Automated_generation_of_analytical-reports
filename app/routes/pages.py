@@ -13,6 +13,8 @@ from app.services.chart_service import ChartService
 from app.services.chat_service import ChatNotFoundError, ChatService
 from app.services.export_service import ExportService
 from app.services.file_service import FileService
+from app.services.pdf_service import PdfService
+from app.services.pptx_service import PptxService
 from app.services.report_service import ReportService
 
 
@@ -21,9 +23,11 @@ templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 file_service = FileService(settings)
 analysis_service = AnalysisService(file_service)
-chart_service = ChartService(file_service, settings)
+chart_service = ChartService(file_service, settings, analysis_service=analysis_service)
 report_service = ReportService(file_service, settings)
 export_service = ExportService(settings)
+pdf_service = PdfService(file_service, settings)
+pptx_service = PptxService(file_service, settings)
 ai_service = AIService(settings)
 chat_service = ChatService(
     file_service=file_service,
@@ -32,6 +36,8 @@ chat_service = ChatService(
     report_service=report_service,
     export_service=export_service,
     ai_service=ai_service,
+    pdf_service=pdf_service,
+    pptx_service=pptx_service,
     settings=settings,
 )
 
@@ -46,8 +52,26 @@ def render_page(request: Request, template_name: str, partial_name: str, context
 
 @router.get("/")
 async def index(request: Request):
+    return render_page(
+        request,
+        "index.html",
+        "partials/index_content.html",
+        {
+            "request": request,
+            "page_title": "Analytics Assistant",
+            "error_message": None,
+            "success_message": None,
+        },
+    )
+
+
+@router.get("/chat")
+async def chat_new(request: Request):
     conversation = chat_service.create_conversation()
-    return RedirectResponse(url=f"/chat/{conversation['conversation_id']}", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(
+        url=f"/chat/{conversation['conversation_id']}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 @router.get("/chat/{conversation_id}")

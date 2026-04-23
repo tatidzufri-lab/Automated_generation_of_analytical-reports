@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
 from typing import Any
 
 from docx import Document
@@ -9,7 +8,9 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches
 
 from app.core.config import Settings, get_settings
+from app.services.artifact_naming import humanize_artifact_name
 from app.services.file_service import FileService, StoredFile
+from app.services.time_utils import filename_timestamp, format_local
 
 
 logger = logging.getLogger(__name__)
@@ -26,18 +27,48 @@ class ReportService:
         analysis: dict[str, Any],
         charts: list[dict[str, Any]],
         preview_context: dict[str, Any],
+        business_metrics: dict[str, Any] | None = None,
     ) -> dict[str, str]:
         self.file_service.ensure_storage()
         report_name = self._build_report_name(stored_file.file_id)
         report_path = self.settings.output_dir / report_name
 
         document = Document()
-        title = document.add_heading("Data Assistant Report", level=0)
+        title = document.add_heading("Analytics Assistant Report", level=0)
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
         document.add_paragraph(f"Исходный файл: {stored_file.original_name}")
         document.add_paragraph(f"Тип: {stored_file.kind}")
-        document.add_paragraph(f"Сформирован: {datetime.now(tz=UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}")
+        document.add_paragraph(f"Сформирован: {format_local('%d.%m.%Y %H:%M')}")
+
+        if business_metrics and (business_metrics.get("total_sales") or business_metrics.get("total_orders")):
+            document.add_heading("Бизнес-метрики", level=1)
+            business_table = document.add_table(rows=1, cols=2)
+            business_table.style = "Light Grid Accent 3"
+            header = business_table.rows[0].cells
+            header[0].text = "Показатель"
+            header[1].text = "Значение"
+            for label, value in (
+                ("Общая сумма", f"{business_metrics.get('total_sales', 0):,.2f}".replace(",", " ")),
+                ("Средний чек", f"{business_metrics.get('avg_ticket', 0):,.2f}".replace(",", " ")),
+                ("Количество записей", f"{business_metrics.get('total_orders', 0):,}".replace(",", " ")),
+            ):
+                row = business_table.add_row().cells
+                row[0].text = label
+                row[1].text = value
+
+            top_items = business_metrics.get("top_items") or []
+            if top_items:
+                document.add_heading("Топ позиций", level=2)
+                top_table = document.add_table(rows=1, cols=2)
+                top_table.style = "Light Shading Accent 3"
+                top_header = top_table.rows[0].cells
+                top_header[0].text = "Позиция"
+                top_header[1].text = "Сумма"
+                for item in top_items:
+                    row = top_table.add_row().cells
+                    row[0].text = str(item.get("item", ""))
+                    row[1].text = f"{float(item.get('amount', 0)):,.2f}".replace(",", " ")
 
         document.add_heading("Краткое резюме", level=1)
         summary_table = document.add_table(rows=1, cols=2)
@@ -102,7 +133,16 @@ class ReportService:
         if charts:
             document.add_heading("Графики", level=1)
             for chart in charts:
-                document.add_paragraph(chart.get("description", f"Сгенерированный график: {chart['file_name']}"))
+                display_name = (
+                    chart.get("display_name")
+                    or humanize_artifact_name(chart.get("file_name", ""))
+                )
+                caption = document.add_paragraph()
+                caption_run = caption.add_run(display_name)
+                caption_run.bold = True
+                description = chart.get("description")
+                if description:
+                    document.add_paragraph(description)
                 document.add_picture(
                     str(self.settings.output_dir / chart["file_name"]),
                     width=Inches(6.3),
@@ -110,12 +150,13 @@ class ReportService:
 
         document.save(report_path)
         logger.info("Generated report %s for %s", report_name, stored_file.file_id)
+
         return {
             "file_name": report_name,
+            "display_name": humanize_artifact_name(report_name),
             "storage_url": f"/storage/outputs/{report_name}",
             "download_url": f"/download/{report_name}",
         }
 
     def _build_report_name(self, file_id: str) -> str:
-        timestamp = datetime.now(tz=UTC).strftime("%Y%m%d%H%M%S")
-        return f"{file_id}__report__{timestamp}.docx"
+        return f"{file_id}__report__{filename_timestamp()}.docx"
