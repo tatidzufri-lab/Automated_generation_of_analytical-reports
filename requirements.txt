@@ -9,8 +9,8 @@ Pillow==11.1.0
 matplotlib==3.10.1
 python-docx==1.1.2
 python-dotenv==1.0.1
-openai>=1.0.0
+openai==3.42.1
 weasyprint==63.1
-pydyf>=0.11.0,<0.12
+pydyf==0.11.0
 python-pptx==1.0.2
 tzdata==2025.2

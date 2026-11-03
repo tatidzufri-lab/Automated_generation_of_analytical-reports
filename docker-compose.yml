@@ -5,7 +5,9 @@ services:
     env_file:
       - .env
     ports:
-      - "${APP_PORT:-8000}:8000"
+      # Только localhost: наружу приложение отдаёт nginx. Привязка к 0.0.0.0
+      # открыла бы порт в интернет, потому что docker обходит правила UFW.
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
     volumes:
       - ./storage/uploads:/app/storage/uploads
       - ./storage/outputs:/app/storage/outputs
