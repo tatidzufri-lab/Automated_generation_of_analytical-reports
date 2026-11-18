@@ -41,6 +41,11 @@ class Settings:
     openai_api_key: str | None
     openai_model: str
     openai_max_history_messages: int
+    openai_max_output_tokens: int
+    ai_max_message_chars: int
+    ai_max_per_chat: int
+    ai_max_per_day: int
+    ai_usage_file: Path
     timezone: str
 
 
@@ -63,5 +68,12 @@ def get_settings() -> Settings:
         openai_api_key=os.getenv("OPENAI_API_KEY"),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-5-mini"),
         openai_max_history_messages=int(os.getenv("OPENAI_MAX_HISTORY_MESSAGES", "8")),
+        # Ограничения публичного демо: каждое сообщение в чат — платный вызов модели.
+        # Потолок ответа с запасом: у gpt-5-mini в него входят и токены рассуждения.
+        openai_max_output_tokens=int(os.getenv("OPENAI_MAX_OUTPUT_TOKENS", "4000")),
+        ai_max_message_chars=int(os.getenv("AI_MAX_MESSAGE_CHARS", "2000")),
+        ai_max_per_chat=int(os.getenv("AI_MAX_PER_CHAT", "15")),
+        ai_max_per_day=int(os.getenv("AI_MAX_PER_DAY", "150")),
+        ai_usage_file=output_dir / ".ai_usage.json",
         timezone=os.getenv("APP_TIMEZONE", "Europe/Moscow"),
     )

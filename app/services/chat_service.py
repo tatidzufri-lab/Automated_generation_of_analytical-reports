@@ -20,6 +20,7 @@ from app.services.pdf_service import PdfService, PdfServiceError
 from app.services.pptx_service import PptxService, PptxServiceError
 from app.services.report_service import ReportService
 from app.services.time_utils import format_local
+from app.services.usage_limits import DailyCounter
 
 
 logger = logging.getLogger(__name__)
@@ -60,6 +61,7 @@ class ChatService:
         self.pptx_service = pptx_service
         self.settings = settings or get_settings()
         self.chat_dir = self.settings.storage_dir / "chats"
+        self.daily_ai_counter = DailyCounter(self.settings.ai_usage_file, self.settings.ai_max_per_day)
 
     def ensure_storage(self) -> None:
         self.chat_dir.mkdir(parents=True, exist_ok=True)
@@ -123,12 +125,35 @@ class ChatService:
             )
             return self._persist(conversation)
 
+        max_chars = self.settings.ai_max_message_chars
+        if max_chars > 0 and len(text) > max_chars:
+            conversation["messages"].append(
+                self._new_message("user", text[:300] + "…", attachments=user_attachments)
+            )
+            conversation["messages"].append(
+                self._new_message(
+                    "assistant",
+                    f"Сообщение слишком длинное: {len(text)} символов, в демо можно до {max_chars}. "
+                    "Сократите запрос или загрузите данные файлом.",
+                )
+            )
+            return self._persist(conversation)
+
         user_text = text or "Загрузил файл для обработки."
         conversation["messages"].append(self._new_message("user", user_text, attachments=user_attachments))
 
         active_file = uploaded_file or self._get_active_file(conversation)
         raw_preview_context = self.file_service.build_preview_context(active_file) if active_file else None
         active_file_context = self._build_ai_file_context(active_file) if active_file else None
+
+        limit_note = self._acquire_ai_call(conversation)
+        if limit_note:
+            fallback_message = self._handle_local_prompt(conversation, user_text, active_file)
+            fallback_message["text"] = limit_note + "\n\n" + fallback_message["text"]
+            if uploaded_file and not fallback_message.get("preview"):
+                self._attach_uploaded_file(fallback_message, uploaded_file, raw_preview_context)
+            conversation["messages"].append(fallback_message)
+            return self._persist(conversation)
 
         try:
             plan = self.ai_service.plan_response(
@@ -170,6 +195,27 @@ class ChatService:
                 self._attach_uploaded_file(fallback_message, uploaded_file, raw_preview_context)
             conversation["messages"].append(fallback_message)
             return self._persist(conversation)
+
+    def _acquire_ai_call(self, conversation: dict[str, Any]) -> str | None:
+        """Засчитывает платный вызов модели. Возвращает текст пояснения, если лимит демо исчерпан."""
+        if not self.ai_service.enabled:
+            return None  # без ключа модель не вызывается, сработает обычная ветка «OpenAI не настроен»
+        per_chat = self.settings.ai_max_per_chat
+        used = int(conversation.get("ai_calls", 0))
+        if per_chat > 0 and used >= per_chat:
+            logger.info("AI limit per chat reached: %s", conversation.get("conversation_id"))
+            return (
+                f"В этом чате исчерпан лимит демо: {per_chat} запросов к модели. "
+                "Дальше отвечаю локальными сценариями без модели. Можно открыть новый чат."
+            )
+        if not self.daily_ai_counter.try_acquire():
+            logger.warning("AI daily limit reached (%s)", self.settings.ai_max_per_day)
+            return (
+                "Суточный лимит запросов к модели в демо исчерпан. "
+                "До конца суток отвечаю локальными сценариями без модели."
+            )
+        conversation["ai_calls"] = used + 1
+        return None
 
     def activate_file(self, conversation_id: str, file_id: str) -> dict[str, Any]:
         conversation = self.get_conversation(conversation_id)

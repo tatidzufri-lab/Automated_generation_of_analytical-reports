@@ -70,6 +70,7 @@ class AIService:
         try:
             response = client.responses.create(
                 model=self.settings.openai_model,
+                max_output_tokens=self.settings.openai_max_output_tokens,
                 instructions=self._system_prompt(),
                 input=self._build_input(
                     conversation_messages=conversation_messages,
