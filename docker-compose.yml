@@ -11,4 +11,6 @@ services:
     volumes:
       - ./storage/uploads:/app/storage/uploads
       - ./storage/outputs:/app/storage/outputs
+      # История AI-чата: без тома пропадала при каждой пересборке контейнера
+      - ./storage/chats:/app/storage/chats
     restart: unless-stopped

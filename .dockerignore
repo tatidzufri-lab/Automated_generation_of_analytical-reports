@@ -8,3 +8,4 @@ __pycache__/
 venv/
 storage/uploads/*
 storage/outputs/*
+storage/chats/*
