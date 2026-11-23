@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
+from app.core.i18n import tr
+
 
 CHART_LABELS = {
     "time_series": "Динамика продаж",
@@ -59,6 +61,7 @@ def humanize_artifact_name(file_name: str) -> str:
     else:
         label = CHART_LABELS.get(artifact_type or "", artifact_type or stem)
 
+    label = tr(label)  # подписи в словарях выше — ключи перевода
     formatted_time = _format_timestamp(timestamp)
     if formatted_time:
         return f"{label} · {formatted_time}"

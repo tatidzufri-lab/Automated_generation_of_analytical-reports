@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import tr
+
 import logging
 from typing import Any, Optional
 
@@ -89,7 +91,7 @@ class AnalysisService:
     ) -> dict[str, Any]:
         """Compute sales-style metrics: totals, average ticket, orders, top items, time series."""
         if stored_file.kind != "table":
-            raise ValueError("Business metrics требуют табличный файл.")
+            raise ValueError(tr("Business metrics требуют табличный файл."))
 
         dataframe = self.file_service.read_dataframe(stored_file).copy()
         detected = self.detect_business_columns(dataframe)
@@ -189,26 +191,25 @@ class AnalysisService:
                 )
 
         insights = [
-            f"Найдено {len(dataframe):,} строк и {len(dataframe.columns)} колонок.".replace(",", " "),
-            "Числовая статистика рассчитана с игнорированием NaN, пропуски вынесены в отдельный блок.",
+            tr("Найдено {0:,} строк и {1} колонок.", len(dataframe), len(dataframe.columns)).replace(",", " "),
+            tr("Числовая статистика рассчитана с игнорированием NaN, пропуски вынесены в отдельный блок."),
         ]
         if stats_records:
             widest_spread = max(stats_records, key=lambda item: self._to_float(item["std"]))
-            insights.append(f"Наибольшая вариативность у колонки «{widest_spread['column']}».")
+            insights.append(tr("Наибольшая вариативность у колонки «{0}».", widest_spread['column']))
 
         category_candidates = [
             item for item in columns if item["kind"] in {"categorical", "text"} and item["missing"] < len(dataframe)
         ]
         if category_candidates:
             insights.append(
-                f"Колонка «{category_candidates[0]['name']}» подходит для bar-chart сегментации."
+                tr("Колонка «{0}» подходит для bar-chart сегментации.", category_candidates[0]['name'])
             )
 
         detected = self.detect_business_columns(dataframe)
         if detected["date_col"] and detected["amount_col"]:
             insights.append(
-                f"Похоже на данные продаж: дата «{detected['date_col']}», сумма «{detected['amount_col']}». "
-                "Доступен бизнес-отчёт в PDF и PPTX."
+                tr("Похоже на данные продаж: дата «{0}», сумма «{1}». Доступен бизнес-отчёт в PDF и PPTX.", detected['date_col'], detected['amount_col'])
             )
 
         logger.info("Completed tabular analysis for %s", stored_file.file_id)
@@ -233,9 +234,9 @@ class AnalysisService:
         grayscale = np.array(image.convert("L"))
 
         insights = [
-            f"Разрешение изображения: {image.width}×{image.height}.",
-            f"Средняя яркость: {grayscale.mean():.2f}.",
-            "Для изображений доступны histogram, bar и line графики на основе пиксельных значений.",
+            tr("Разрешение изображения: {0}×{1}.", image.width, image.height),
+            tr("Средняя яркость: {0:.2f}.", grayscale.mean()),
+            tr("Для изображений доступны histogram, bar и line графики на основе пиксельных значений."),
         ]
 
         if array.ndim == 3:

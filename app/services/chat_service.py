@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import tr
+
 import json
 import logging
 import re
@@ -71,8 +73,7 @@ class ChatService:
         conversation_id = uuid4().hex
         created_at = _utc_now()
         greeting = (
-            "Я подключён к OpenAI и работаю как AI-ассистент по данным. "
-            "Можно отправить обычный текст, загрузить таблицу или изображение, попросить анализ, график, отчёт или сохранить выводы в файл."
+            tr("Я подключён к OpenAI и работаю как AI-ассистент по данным. Можно отправить обычный текст, загрузить таблицу или изображение, попросить анализ, график, отчёт или сохранить выводы в файл.")
         )
         conversation = {
             "conversation_id": conversation_id,
@@ -111,7 +112,7 @@ class ChatService:
                 if text:
                     conversation["messages"].append(self._new_message("user", text))
                 conversation["messages"].append(
-                    self._new_message("assistant", f"Не удалось обработать загрузку: {exc}")
+                    self._new_message("assistant", tr("Не удалось обработать загрузку: {0}", exc))
                 )
                 return self._persist(conversation)
 
@@ -121,7 +122,7 @@ class ChatService:
 
         if not text and not user_attachments:
             conversation["messages"].append(
-                self._new_message("assistant", "Сообщение пустое. Напишите запрос или прикрепите файл.")
+                self._new_message("assistant", tr("Сообщение пустое. Напишите запрос или прикрепите файл."))
             )
             return self._persist(conversation)
 
@@ -133,13 +134,12 @@ class ChatService:
             conversation["messages"].append(
                 self._new_message(
                     "assistant",
-                    f"Сообщение слишком длинное: {len(text)} символов, в демо можно до {max_chars}. "
-                    "Сократите запрос или загрузите данные файлом.",
+                    tr("Сообщение слишком длинное: {0} символов, в демо можно до {1}. Сократите запрос или загрузите данные файлом.", len(text), max_chars),
                 )
             )
             return self._persist(conversation)
 
-        user_text = text or "Загрузил файл для обработки."
+        user_text = text or tr("Загрузил файл для обработки.")
         conversation["messages"].append(self._new_message("user", user_text, attachments=user_attachments))
 
         active_file = uploaded_file or self._get_active_file(conversation)
@@ -178,7 +178,7 @@ class ChatService:
             logger.warning("OpenAI is not configured: %s", exc)
             assistant_message = self._new_message(
                 "assistant",
-                f"OpenAI сейчас не настроен: {exc} Добавьте ключ в `.env`, и чат начнёт отвечать через модель.",
+                tr("OpenAI сейчас не настроен: {0} Добавьте ключ в `.env`, и чат начнёт отвечать через модель.", exc),
             )
             if uploaded_file:
                 self._attach_uploaded_file(assistant_message, uploaded_file, raw_preview_context)
@@ -188,7 +188,7 @@ class ChatService:
             logger.warning("OpenAI request failed, switching to local fallback: %s", exc)
             fallback_message = self._handle_local_prompt(conversation, user_text, active_file)
             fallback_message["text"] = (
-                "OpenAI временно недоступен, поэтому я выполнил резервный локальный сценарий.\n\n"
+                tr("OpenAI временно недоступен, поэтому я выполнил резервный локальный сценарий.\n\n")
                 + fallback_message["text"]
             )
             if uploaded_file and not fallback_message.get("preview"):
@@ -205,14 +205,12 @@ class ChatService:
         if per_chat > 0 and used >= per_chat:
             logger.info("AI limit per chat reached: %s", conversation.get("conversation_id"))
             return (
-                f"В этом чате исчерпан лимит демо: {per_chat} запросов к модели. "
-                "Дальше отвечаю локальными сценариями без модели. Можно открыть новый чат."
+                tr("В этом чате исчерпан лимит демо: {0} запросов к модели. Дальше отвечаю локальными сценариями без модели. Можно открыть новый чат.", per_chat)
             )
         if not self.daily_ai_counter.try_acquire():
             logger.warning("AI daily limit reached (%s)", self.settings.ai_max_per_day)
             return (
-                "Суточный лимит запросов к модели в демо исчерпан. "
-                "До конца суток отвечаю локальными сценариями без модели."
+                tr("Суточный лимит запросов к модели в демо исчерпан. До конца суток отвечаю локальными сценариями без модели.")
             )
         conversation["ai_calls"] = used + 1
         return None
@@ -222,7 +220,7 @@ class ChatService:
         file_record = next((item for item in conversation.get("files", []) if item["file_id"] == file_id), None)
         if not file_record:
             conversation["messages"].append(
-                self._new_message("assistant", "Не нашёл этот файл в текущем чате.")
+                self._new_message("assistant", tr("Не нашёл этот файл в текущем чате."))
             )
             return self._persist(conversation)
 
@@ -230,7 +228,7 @@ class ChatService:
         conversation["messages"].append(
             self._new_message(
                 "assistant",
-                f"Сделал активным файл «{file_record['original_name']}». Теперь новые AI-запросы будут применяться к нему.",
+                tr("Сделал активным файл «{0}». Теперь новые AI-запросы будут применяться к нему.", file_record['original_name']),
             )
         )
         return self._persist(conversation)
@@ -320,7 +318,7 @@ class ChatService:
                         )
                         assistant_message["attachments"].append(self._artifact_chip(pdf, "pdf"))
                     except PdfServiceError as exc:
-                        notes.append(f"Не удалось собрать PDF: {exc}")
+                        notes.append(tr("Не удалось собрать PDF: {0}", exc))
                 elif action_type == "generate_pptx":
                     if analysis_cache is None:
                         analysis_cache = self.analysis_service.analyze(active_file)
@@ -335,7 +333,7 @@ class ChatService:
                         )
                         assistant_message["attachments"].append(self._artifact_chip(pptx, "pptx"))
                     except PptxServiceError as exc:
-                        notes.append(f"Не удалось собрать PPTX: {exc}")
+                        notes.append(tr("Не удалось собрать PPTX: {0}", exc))
                 elif action_type == "generate_business_report":
                     if preview_cache is None:
                         preview_cache = self.file_service.build_preview_context(active_file)
@@ -356,7 +354,7 @@ class ChatService:
                         )
                         assistant_message["attachments"].append(self._artifact_chip(pdf, "pdf"))
                     except PdfServiceError as exc:
-                        notes.append(f"PDF не удалось сгенерировать: {exc}")
+                        notes.append(tr("PDF не удалось сгенерировать: {0}", exc))
                     try:
                         pptx = self.pptx_service.generate_report(
                             active_file,
@@ -366,7 +364,7 @@ class ChatService:
                         )
                         assistant_message["attachments"].append(self._artifact_chip(pptx, "pptx"))
                     except PptxServiceError as exc:
-                        notes.append(f"PPTX не удалось сгенерировать: {exc}")
+                        notes.append(tr("PPTX не удалось сгенерировать: {0}", exc))
                 elif action_type == "save_summary":
                     if analysis_cache is None:
                         analysis_cache = self.analysis_service.analyze(active_file)
@@ -380,7 +378,7 @@ class ChatService:
                     )
                     assistant_message["attachments"].append(self._artifact_chip(export_record, "export"))
             except FileServiceError as exc:
-                notes.append(f"Не удалось выполнить действие `{action_type}`: {exc}")
+                notes.append(tr("Не удалось выполнить действие `{0}`: {1}", action_type, exc))
 
         if notes:
             assistant_message["text"] = assistant_message["text"].rstrip() + "\n\n" + "\n".join(notes)
@@ -476,25 +474,25 @@ class ChatService:
             if not active_file:
                 return self._new_message(
                     "assistant",
-                    "Пока нет активного файла. Загрузите CSV, Excel, JSON или изображение. После этого можно попросить анализ, график, отчёт или сохранение в файл.",
+                    tr("Пока нет активного файла. Загрузите CSV, Excel, JSON или изображение. После этого можно попросить анализ, график, отчёт или сохранение в файл."),
                 )
 
             return self._new_message(
                 "assistant",
-                "Для активного файла могу показать предпросмотр, собрать анализ, построить `histogram`, `bar` или `line`, сделать DOCX-отчёт и сохранить краткую markdown-сводку. Для выбора колонок напишите, например: `Построй line chart x: date y: revenue`.",
+                tr("Для активного файла могу показать предпросмотр, собрать анализ, построить `histogram`, `bar` или `line`, сделать DOCX-отчёт и сохранить краткую markdown-сводку. Для выбора колонок напишите, например: `Построй line chart x: date y: revenue`."),
             )
 
         if not active_file:
             return self._new_message(
                 "assistant",
-                "Сначала нужен файл или изображение. После загрузки я смогу строить графики и сохранять результаты.",
+                tr("Сначала нужен файл или изображение. После загрузки я смогу строить графики и сохранять результаты."),
             )
 
         if action == "preview":
             preview = self.file_service.build_preview_context(active_file)
             return self._new_message(
                 "assistant",
-                f"Показываю текущий файл «{active_file.original_name}».",
+                tr("Показываю текущий файл «{0}».", active_file.original_name),
                 preview=self._compact_preview(preview),
             )
 
@@ -517,11 +515,11 @@ class ChatService:
                     y_column=y_column,
                 )
             except FileServiceError as exc:
-                return self._new_message("assistant", f"Не удалось построить график: {exc}")
+                return self._new_message("assistant", tr("Не удалось построить график: {0}", exc))
 
             return self._new_message(
                 "assistant",
-                f"Готово: построил {chart_type}-график для файла «{active_file.original_name}» и сохранил его на сервере.",
+                tr("Готово: построил {0}-график для файла «{1}» и сохранил его на сервере.", chart_type, active_file.original_name),
                 attachments=[self._artifact_chip(chart, "chart")],
             )
 
@@ -535,11 +533,11 @@ class ChatService:
                     active_file, analysis, chart_records[:3], preview, business_metrics=business
                 )
             except FileServiceError as exc:
-                return self._new_message("assistant", f"Не удалось собрать отчёт: {exc}")
+                return self._new_message("assistant", tr("Не удалось собрать отчёт: {0}", exc))
 
             return self._new_message(
                 "assistant",
-                f"DOCX-отчёт для файла «{active_file.original_name}» готов. Его можно открыть или скачать.",
+                tr("DOCX-отчёт для файла «{0}» готов. Его можно открыть или скачать.", active_file.original_name),
                 attachments=[self._artifact_chip(report, "report")],
             )
 
@@ -550,11 +548,11 @@ class ChatService:
                 chart_records = self._ensure_business_charts(active_file, business)
                 pdf = self.pdf_service.generate_report(active_file, analysis, business, chart_records[:6])
             except (FileServiceError, PdfServiceError) as exc:
-                return self._new_message("assistant", f"Не удалось собрать PDF: {exc}")
+                return self._new_message("assistant", tr("Не удалось собрать PDF: {0}", exc))
 
             return self._new_message(
                 "assistant",
-                f"PDF-отчёт для файла «{active_file.original_name}» готов. Скачайте файл ниже.",
+                tr("PDF-отчёт для файла «{0}» готов. Скачайте файл ниже.", active_file.original_name),
                 attachments=[self._artifact_chip(pdf, "pdf")],
             )
 
@@ -565,11 +563,11 @@ class ChatService:
                 chart_records = self._ensure_business_charts(active_file, business)
                 pptx = self.pptx_service.generate_report(active_file, analysis, business, chart_records[:6])
             except (FileServiceError, PptxServiceError) as exc:
-                return self._new_message("assistant", f"Не удалось собрать PPTX: {exc}")
+                return self._new_message("assistant", tr("Не удалось собрать PPTX: {0}", exc))
 
             return self._new_message(
                 "assistant",
-                f"PowerPoint презентация для файла «{active_file.original_name}» готова.",
+                tr("PowerPoint презентация для файла «{0}» готова.", active_file.original_name),
                 attachments=[self._artifact_chip(pptx, "pptx")],
             )
 
@@ -583,14 +581,14 @@ class ChatService:
                 pdf = self.pdf_service.generate_report(active_file, analysis, business, chart_records[:6])
                 pptx = self.pptx_service.generate_report(active_file, analysis, business, chart_records[:6])
             except (FileServiceError, PdfServiceError, PptxServiceError) as exc:
-                return self._new_message("assistant", f"Не удалось собрать бизнес-отчёт: {exc}")
+                return self._new_message("assistant", tr("Не удалось собрать бизнес-отчёт: {0}", exc))
 
             attachments = [self._artifact_chip(chart, "chart") for chart in chart_records[:6]]
             attachments.append(self._artifact_chip(pdf, "pdf"))
             attachments.append(self._artifact_chip(pptx, "pptx"))
             return self._new_message(
                 "assistant",
-                "Собрал бизнес-пакет: набор графиков, PDF-отчёт и PowerPoint-презентацию.",
+                tr("Собрал бизнес-пакет: набор графиков, PDF-отчёт и PowerPoint-презентацию."),
                 attachments=attachments,
             )
 
@@ -605,7 +603,7 @@ class ChatService:
         )
         return self._new_message(
             "assistant",
-            "Сохранил краткую сводку в markdown-файл. Туда вошли ключевые выводы, параметры файла и последние сообщения чата.",
+            tr("Сохранил краткую сводку в markdown-файл. Туда вошли ключевые выводы, параметры файла и последние сообщения чата."),
             attachments=[self._artifact_chip(export_record, "export")],
         )
 
@@ -669,7 +667,7 @@ class ChatService:
 
     def _file_chip(self, stored_file: StoredFile) -> dict[str, Any]:
         return {
-            "title": "Вложение",
+            "title": tr("Вложение"),
             "kind": "file",
             "name": stored_file.original_name,
             "description": f"{stored_file.kind} · {round(stored_file.size_bytes / 1024, 2)} KB",
@@ -707,8 +705,8 @@ class ChatService:
                 "headers": preview["table_headers"][:6],
                 "rows": [row[:6] for row in preview["table_rows"][:6]],
                 "meta": [
-                    f"{preview['row_count']} строк",
-                    f"{preview['column_count']} колонок",
+                    tr("{0} строк", preview['row_count']),
+                    tr("{0} колонок", preview['column_count']),
                     f"{len(preview['numeric_columns'])} numeric",
                 ],
             }
@@ -732,33 +730,30 @@ class ChatService:
     def _analysis_message_text(self, stored_file: StoredFile, analysis: dict[str, Any]) -> str:
         summary = analysis["summary"]
         return (
-            f"Анализ для «{stored_file.original_name}» готов. "
-            f"База: {summary['rows']} x {summary['columns']}, "
-            f"числовых метрик: {summary['numeric_columns']}, "
-            f"пропусков: {summary['missing_cells']}."
+            tr("Анализ для «{0}» готов. База: {1} x {2}, числовых метрик: {3}, пропусков: {4}.", stored_file.original_name, summary['rows'], summary['columns'], summary['numeric_columns'], summary['missing_cells'])
         )
 
     def _detect_action(self, normalized: str) -> str:
-        if any(token in normalized for token in ("бизнес-отч", "business report", "полный отчёт", "презентацию и pdf")):
+        if any(token in normalized for token in ("бизнес-отч", "business report", "полный отчёт", "презентацию и pdf", "full report", "business pack", "full pack")):
             return "business"
         if any(token in normalized for token in ("pdf", "пдф")):
             return "pdf"
-        if any(token in normalized for token in ("pptx", "powerpoint", "презентац", "слайд")):
+        if any(token in normalized for token in ("pptx", "powerpoint", "презентац", "слайд", "presentation", "slide")):
             return "pptx"
-        if any(token in normalized for token in ("граф", "chart", "plot", "hist", "bar", "line", "диаграм")):
+        if any(token in normalized for token in ("граф", "chart", "plot", "hist", "bar", "line", "диаграм", "graph")):
             return "chart"
         if any(token in normalized for token in ("отч", "report", "docx")):
             return "report"
-        if any(token in normalized for token in ("сохран", "экспорт", "markdown", ".md", "txt")):
+        if any(token in normalized for token in ("сохран", "экспорт", "markdown", ".md", "txt", "save", "export")):
             return "save"
-        if any(token in normalized for token in ("анализ", "проанализ", "статист", "summary", "свод")):
+        if any(token in normalized for token in ("анализ", "проанализ", "статист", "summary", "свод", "analy", "statistic")):
             return "analyze"
-        if any(token in normalized for token in ("preview", "предпрос", "покажи", "просмотр")):
+        if any(token in normalized for token in ("preview", "предпрос", "покажи", "просмотр", "show")):
             return "preview"
         return "help"
 
     def _detect_chart_type(self, normalized: str) -> str:
-        if any(token in normalized for token in ("time", "динам", "time_series")):
+        if any(token in normalized for token in ("time", "динам", "time_series", "trend", "over time")):
             return "time_series"
         if any(token in normalized for token in ("топ", "top")):
             return "top_items"
@@ -766,7 +761,7 @@ class ChatService:
             return "cumulative"
         if any(token in normalized for token in ("месяц", "month")):
             return "monthly_sales"
-        if any(token in normalized for token in ("день", "дней", "daily")):
+        if any(token in normalized for token in ("день", "дней", "daily", "per day")):
             return "daily_count"
         if any(token in normalized for token in ("распред", "distribut")):
             return "distribution"

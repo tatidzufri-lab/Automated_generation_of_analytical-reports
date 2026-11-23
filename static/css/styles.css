@@ -1632,3 +1632,40 @@ details[open] summary::before {
         flex-direction: column;
     }
 }
+
+/* ---------- Language switch ---------- */
+
+.lang-switch {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.2rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.lang-switch__item {
+    min-width: 2.4rem;
+    padding: 0.3rem 0.55rem;
+    border-radius: calc(var(--radius) - 2px);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--muted);
+}
+
+a.lang-switch__item:hover {
+    background: var(--bg-soft);
+    color: var(--ink);
+}
+
+.lang-switch__item.is-active {
+    background: var(--brand);
+    color: #fff;
+}
+
+@media (max-width: 720px) {
+    .topbar {
+        flex-wrap: wrap;
+    }
+}

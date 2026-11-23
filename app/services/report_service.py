@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import tr
+
 import logging
 from typing import Any
 
@@ -37,21 +39,21 @@ class ReportService:
         title = document.add_heading("Analytics Assistant Report", level=0)
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-        document.add_paragraph(f"Исходный файл: {stored_file.original_name}")
-        document.add_paragraph(f"Тип: {stored_file.kind}")
-        document.add_paragraph(f"Сформирован: {format_local('%d.%m.%Y %H:%M')}")
+        document.add_paragraph(tr("Исходный файл: {0}", stored_file.original_name))
+        document.add_paragraph(tr("Тип: {0}", stored_file.kind))
+        document.add_paragraph(tr("Сформирован: {0}", format_local('%d.%m.%Y %H:%M')))
 
         if business_metrics and (business_metrics.get("total_sales") or business_metrics.get("total_orders")):
-            document.add_heading("Бизнес-метрики", level=1)
+            document.add_heading(tr("Бизнес-метрики"), level=1)
             business_table = document.add_table(rows=1, cols=2)
             business_table.style = "Light Grid Accent 3"
             header = business_table.rows[0].cells
-            header[0].text = "Показатель"
-            header[1].text = "Значение"
+            header[0].text = tr("Показатель")
+            header[1].text = tr("Значение")
             for label, value in (
-                ("Общая сумма", f"{business_metrics.get('total_sales', 0):,.2f}".replace(",", " ")),
-                ("Средний чек", f"{business_metrics.get('avg_ticket', 0):,.2f}".replace(",", " ")),
-                ("Количество записей", f"{business_metrics.get('total_orders', 0):,}".replace(",", " ")),
+                (tr("Общая сумма"), f"{business_metrics.get('total_sales', 0):,.2f}".replace(",", " ")),
+                (tr("Средний чек"), f"{business_metrics.get('avg_ticket', 0):,.2f}".replace(",", " ")),
+                (tr("Количество записей"), f"{business_metrics.get('total_orders', 0):,}".replace(",", " ")),
             ):
                 row = business_table.add_row().cells
                 row[0].text = label
@@ -59,23 +61,23 @@ class ReportService:
 
             top_items = business_metrics.get("top_items") or []
             if top_items:
-                document.add_heading("Топ позиций", level=2)
+                document.add_heading(tr("Топ позиций"), level=2)
                 top_table = document.add_table(rows=1, cols=2)
                 top_table.style = "Light Shading Accent 3"
                 top_header = top_table.rows[0].cells
-                top_header[0].text = "Позиция"
-                top_header[1].text = "Сумма"
+                top_header[0].text = tr("Позиция")
+                top_header[1].text = tr("Сумма")
                 for item in top_items:
                     row = top_table.add_row().cells
                     row[0].text = str(item.get("item", ""))
                     row[1].text = f"{float(item.get('amount', 0)):,.2f}".replace(",", " ")
 
-        document.add_heading("Краткое резюме", level=1)
+        document.add_heading(tr("Краткое резюме"), level=1)
         summary_table = document.add_table(rows=1, cols=2)
         summary_table.style = "Light Grid Accent 1"
         header_cells = summary_table.rows[0].cells
-        header_cells[0].text = "Метрика"
-        header_cells[1].text = "Значение"
+        header_cells[0].text = tr("Метрика")
+        header_cells[1].text = tr("Значение")
         for label, value in {
             "Rows / Height": analysis["summary"]["rows"],
             "Columns / Width": analysis["summary"]["columns"],
@@ -86,12 +88,12 @@ class ReportService:
             row[0].text = str(label)
             row[1].text = str(value)
 
-        document.add_heading("Выводы", level=1)
+        document.add_heading(tr("Выводы"), level=1)
         for insight in analysis["insights"]:
             document.add_paragraph(insight, style="List Bullet")
 
         if analysis["stats"]:
-            document.add_heading("Статистика", level=1)
+            document.add_heading(tr("Статистика"), level=1)
             headers = list(analysis["stats"][0].keys())
             stats_table = document.add_table(rows=1, cols=len(headers))
             stats_table.style = "Light Shading Accent 1"
@@ -103,7 +105,7 @@ class ReportService:
                     cells[index].text = str(item[header])
 
         if analysis["missing_summary"]:
-            document.add_heading("Пропуски", level=1)
+            document.add_heading(tr("Пропуски"), level=1)
             missing_table = document.add_table(rows=1, cols=3)
             missing_table.style = "Light Grid Accent 2"
             for index, header in enumerate(["Column", "Missing", "Percent"]):
@@ -127,11 +129,11 @@ class ReportService:
                     cells[index].text = str(value)
         else:
             document.add_paragraph(
-                f"Изображение {preview_context['image_width']}×{preview_context['image_height']} ({preview_context['image_mode']})"
+                tr("Изображение {0}×{1} ({2})", preview_context['image_width'], preview_context['image_height'], preview_context['image_mode'])
             )
 
         if charts:
-            document.add_heading("Графики", level=1)
+            document.add_heading(tr("Графики"), level=1)
             for chart in charts:
                 display_name = (
                     chart.get("display_name")

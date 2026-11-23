@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import tr
+
 import logging
 from typing import Any, Optional
 
@@ -73,7 +75,7 @@ class ChartService:
         chart_type = (chart_type or "").lower()
         if chart_type not in SUPPORTED_CHART_TYPES:
             raise FileReadError(
-                "Поддерживаются графики: line, bar, histogram, time_series, top_items, daily_count, monthly_sales, cumulative, distribution."
+                tr("Поддерживаются графики: line, bar, histogram, time_series, top_items, daily_count, monthly_sales, cumulative, distribution.")
             )
 
         self.file_service.ensure_storage()
@@ -150,7 +152,7 @@ class ChartService:
         item_column: Optional[str] = None,
     ) -> dict[str, Any]:
         if stored_file.kind != "table":
-            raise FileReadError("Бизнес-графики требуют табличный файл.")
+            raise FileReadError(tr("Бизнес-графики требуют табличный файл."))
 
         dataframe = self.file_service.read_dataframe(stored_file)
         detected = self.analysis_service.detect_business_columns(dataframe)
@@ -163,22 +165,22 @@ class ChartService:
 
         if chart_type == "time_series":
             description = self._plot_time_series(dataframe, date_col, amount_col, output_path)
-            title = "Динамика продаж"
+            title = tr("Динамика продаж")
         elif chart_type == "top_items":
             description = self._plot_top_items(dataframe, item_col, amount_col, output_path)
-            title = "Топ позиций"
+            title = tr("Топ позиций")
         elif chart_type == "daily_count":
             description = self._plot_daily_count(dataframe, date_col, output_path)
-            title = "Количество записей по дням"
+            title = tr("Количество записей по дням")
         elif chart_type == "monthly_sales":
             description = self._plot_monthly_sales(dataframe, date_col, amount_col, output_path)
-            title = "Продажи по месяцам"
+            title = tr("Продажи по месяцам")
         elif chart_type == "cumulative":
             description = self._plot_cumulative(dataframe, date_col, amount_col, output_path)
-            title = "Накопленные продажи"
+            title = tr("Накопленные продажи")
         else:
             description = self._plot_distribution(dataframe, amount_col, output_path)
-            title = "Распределение сумм"
+            title = tr("Распределение сумм")
 
         return {
             "title": title,
@@ -199,14 +201,14 @@ class ChartService:
         output_path,
     ) -> str:
         if not date_col or not amount_col or date_col not in dataframe.columns or amount_col not in dataframe.columns:
-            raise FileReadError("Для графика динамики нужны колонки даты и суммы.")
+            raise FileReadError(tr("Для графика динамики нужны колонки даты и суммы."))
 
         frame = dataframe[[date_col, amount_col]].copy()
         frame[date_col] = pd.to_datetime(frame[date_col], errors="coerce")
         frame[amount_col] = pd.to_numeric(frame[amount_col], errors="coerce")
         frame = frame.dropna()
         if frame.empty:
-            raise FileReadError("Недостаточно данных для графика динамики.")
+            raise FileReadError(tr("Недостаточно данных для графика динамики."))
 
         grouped = frame.groupby(date_col)[amount_col].sum().sort_index().reset_index()
         span = (grouped[date_col].max() - grouped[date_col].min()).days
@@ -216,16 +218,16 @@ class ChartService:
         figure, axis = self._make_axes()
         axis.plot(resampled[date_col], resampled[amount_col], linewidth=2.2, color=PALETTE["line"], marker="o", markersize=3)
         axis.fill_between(resampled[date_col], resampled[amount_col], alpha=0.08, color=PALETTE["line"])
-        axis.set_title("Динамика продаж", fontweight="bold")
-        axis.set_xlabel("Дата")
-        axis.set_ylabel("Сумма")
+        axis.set_title(tr("Динамика продаж"), fontweight="bold")
+        axis.set_xlabel(tr("Дата"))
+        axis.set_ylabel(tr("Сумма"))
         axis.grid(True, alpha=0.25)
         axis.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m.%Y"))
         axis.xaxis.set_major_locator(mdates.AutoDateLocator())
         axis.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _p: f"{x:,.0f}".replace(",", " ")))
         plt.setp(axis.xaxis.get_majorticklabels(), rotation=30, ha="right")
         self._save(figure, output_path)
-        return f"Динамика «{amount_col}» по оси «{date_col}»."
+        return tr("Динамика «{0}» по оси «{1}».", amount_col, date_col)
 
     def _plot_top_items(
         self,
@@ -235,25 +237,25 @@ class ChartService:
         output_path,
     ) -> str:
         if not item_col or not amount_col or item_col not in dataframe.columns or amount_col not in dataframe.columns:
-            raise FileReadError("Для топа позиций нужны колонки категории и суммы.")
+            raise FileReadError(tr("Для топа позиций нужны колонки категории и суммы."))
 
         frame = dataframe[[item_col, amount_col]].copy()
         frame[amount_col] = pd.to_numeric(frame[amount_col], errors="coerce")
         frame = frame.dropna()
         if frame.empty:
-            raise FileReadError("Недостаточно данных для топа позиций.")
+            raise FileReadError(tr("Недостаточно данных для топа позиций."))
 
         top = frame.groupby(item_col)[amount_col].sum().sort_values(ascending=True).tail(10)
         labels = [str(idx)[:32] + ("…" if len(str(idx)) > 32 else "") for idx in top.index]
 
         figure, axis = self._make_axes()
         axis.barh(labels, top.values, color=PALETTE["top"])
-        axis.set_title("Топ позиций по продажам", fontweight="bold")
-        axis.set_xlabel("Сумма")
+        axis.set_title(tr("Топ позиций по продажам"), fontweight="bold")
+        axis.set_xlabel(tr("Сумма"))
         axis.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _p: f"{x:,.0f}".replace(",", " ")))
         axis.grid(True, alpha=0.25, axis="x")
         self._save(figure, output_path)
-        return f"Топ позиций по сумме «{amount_col}», категория «{item_col}»."
+        return tr("Топ позиций по сумме «{0}», категория «{1}».", amount_col, item_col)
 
     def _plot_daily_count(
         self,
@@ -262,22 +264,22 @@ class ChartService:
         output_path,
     ) -> str:
         if not date_col or date_col not in dataframe.columns:
-            raise FileReadError("Для графика количества нужна колонка даты.")
+            raise FileReadError(tr("Для графика количества нужна колонка даты."))
         dates = pd.to_datetime(dataframe[date_col], errors="coerce").dropna()
         if dates.empty:
-            raise FileReadError("Недостаточно валидных дат для подсчёта.")
+            raise FileReadError(tr("Недостаточно валидных дат для подсчёта."))
 
         daily = dates.dt.date.value_counts().sort_index()
         figure, axis = self._make_axes()
         axis.plot(daily.index, daily.values, linewidth=1.8, color=PALETTE["count"], marker="o", markersize=3)
         axis.fill_between(daily.index, daily.values, alpha=0.25, color=PALETTE["count"])
-        axis.set_title("Количество записей по дням", fontweight="bold")
-        axis.set_xlabel("Дата")
-        axis.set_ylabel("Количество")
+        axis.set_title(tr("Количество записей по дням"), fontweight="bold")
+        axis.set_xlabel(tr("Дата"))
+        axis.set_ylabel(tr("Количество"))
         axis.grid(True, alpha=0.25)
         plt.setp(axis.xaxis.get_majorticklabels(), rotation=30, ha="right")
         self._save(figure, output_path)
-        return f"Количество записей по дням колонки «{date_col}»."
+        return tr("Количество записей по дням колонки «{0}».", date_col)
 
     def _plot_monthly_sales(
         self,
@@ -287,13 +289,13 @@ class ChartService:
         output_path,
     ) -> str:
         if not date_col or not amount_col or date_col not in dataframe.columns or amount_col not in dataframe.columns:
-            raise FileReadError("Для месячных продаж нужны колонки даты и суммы.")
+            raise FileReadError(tr("Для месячных продаж нужны колонки даты и суммы."))
         frame = dataframe[[date_col, amount_col]].copy()
         frame[date_col] = pd.to_datetime(frame[date_col], errors="coerce")
         frame[amount_col] = pd.to_numeric(frame[amount_col], errors="coerce")
         frame = frame.dropna()
         if frame.empty:
-            raise FileReadError("Недостаточно данных для месячного графика.")
+            raise FileReadError(tr("Недостаточно данных для месячного графика."))
 
         monthly = frame.groupby(frame[date_col].dt.to_period("M"))[amount_col].sum()
         labels = [str(period) for period in monthly.index]
@@ -302,14 +304,14 @@ class ChartService:
 
         figure, axis = self._make_axes()
         axis.bar(labels, values, color=colors, edgecolor="#1a5276", linewidth=0.4)
-        axis.set_title("Продажи по месяцам", fontweight="bold")
-        axis.set_xlabel("Месяц")
-        axis.set_ylabel("Сумма")
+        axis.set_title(tr("Продажи по месяцам"), fontweight="bold")
+        axis.set_xlabel(tr("Месяц"))
+        axis.set_ylabel(tr("Сумма"))
         axis.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _p: f"{x:,.0f}".replace(",", " ")))
         axis.grid(True, alpha=0.25, axis="y")
         plt.setp(axis.xaxis.get_majorticklabels(), rotation=45, ha="right")
         self._save(figure, output_path)
-        return f"Сумма «{amount_col}» по месяцам «{date_col}»."
+        return tr("Сумма «{0}» по месяцам «{1}».", amount_col, date_col)
 
     def _plot_cumulative(
         self,
@@ -319,28 +321,28 @@ class ChartService:
         output_path,
     ) -> str:
         if not date_col or not amount_col or date_col not in dataframe.columns or amount_col not in dataframe.columns:
-            raise FileReadError("Для накопленного графика нужны колонки даты и суммы.")
+            raise FileReadError(tr("Для накопленного графика нужны колонки даты и суммы."))
         frame = dataframe[[date_col, amount_col]].copy()
         frame[date_col] = pd.to_datetime(frame[date_col], errors="coerce")
         frame[amount_col] = pd.to_numeric(frame[amount_col], errors="coerce")
         frame = frame.dropna().sort_values(date_col)
         if frame.empty:
-            raise FileReadError("Недостаточно данных для накопленного графика.")
+            raise FileReadError(tr("Недостаточно данных для накопленного графика."))
 
         cumulative = frame.set_index(date_col)[amount_col].cumsum()
         figure, axis = self._make_axes()
         axis.plot(cumulative.index, cumulative.values, linewidth=2.2, color=PALETTE["cumulative"])
         axis.fill_between(cumulative.index, cumulative.values, alpha=0.2, color=PALETTE["cumulative"])
-        axis.set_title("Накопленные продажи", fontweight="bold")
-        axis.set_xlabel("Дата")
-        axis.set_ylabel("Сумма")
+        axis.set_title(tr("Накопленные продажи"), fontweight="bold")
+        axis.set_xlabel(tr("Дата"))
+        axis.set_ylabel(tr("Сумма"))
         axis.grid(True, alpha=0.25)
         axis.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m.%Y"))
         axis.xaxis.set_major_locator(mdates.AutoDateLocator())
         axis.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _p: f"{x:,.0f}".replace(",", " ")))
         plt.setp(axis.xaxis.get_majorticklabels(), rotation=30, ha="right")
         self._save(figure, output_path)
-        return f"Накопленная сумма «{amount_col}» по оси «{date_col}»."
+        return tr("Накопленная сумма «{0}» по оси «{1}».", amount_col, date_col)
 
     def _plot_distribution(
         self,
@@ -349,26 +351,26 @@ class ChartService:
         output_path,
     ) -> str:
         if not amount_col or amount_col not in dataframe.columns:
-            raise FileReadError("Для распределения нужна колонка суммы.")
+            raise FileReadError(tr("Для распределения нужна колонка суммы."))
         values = pd.to_numeric(dataframe[amount_col], errors="coerce").dropna()
         if len(values) < 2:
-            raise FileReadError("Недостаточно значений для распределения.")
+            raise FileReadError(tr("Недостаточно значений для распределения."))
 
         n_bins = int(min(25, max(10, len(values) // 15)))
         figure, axis = self._make_axes()
         axis.hist(values, bins=n_bins, color=PALETTE["distribution"], edgecolor="#C0392B", alpha=0.85)
         mean_value = float(values.mean())
         median_value = float(values.median())
-        axis.axvline(mean_value, color="#2C3E50", linestyle="--", linewidth=1.6, label=f"Среднее: {mean_value:,.0f}".replace(",", " "))
-        axis.axvline(median_value, color="#27AE60", linestyle="-.", linewidth=1.6, label=f"Медиана: {median_value:,.0f}".replace(",", " "))
-        axis.set_title(f"Распределение «{amount_col}»", fontweight="bold")
-        axis.set_xlabel("Сумма")
-        axis.set_ylabel("Частота")
+        axis.axvline(mean_value, color="#2C3E50", linestyle="--", linewidth=1.6, label=tr("Среднее: {0:,.0f}", mean_value).replace(",", " "))
+        axis.axvline(median_value, color="#27AE60", linestyle="-.", linewidth=1.6, label=tr("Медиана: {0:,.0f}", median_value).replace(",", " "))
+        axis.set_title(tr("Распределение «{0}»", amount_col), fontweight="bold")
+        axis.set_xlabel(tr("Сумма"))
+        axis.set_ylabel(tr("Частота"))
         axis.legend(loc="upper right")
         axis.grid(True, alpha=0.25, axis="y")
         axis.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _p: f"{x:,.0f}".replace(",", " ")))
         self._save(figure, output_path)
-        return f"Распределение значений «{amount_col}»."
+        return tr("Распределение значений «{0}».", amount_col)
 
     # ------------------------------------------------------------------
     # Generic table / image charts (from the data_assistant base)
@@ -394,25 +396,25 @@ class ChartService:
 
         if chart_type == "histogram":
             if not numeric_columns:
-                raise FileReadError("Для histogram нужен хотя бы один числовой столбец.")
+                raise FileReadError(tr("Для histogram нужен хотя бы один числовой столбец."))
             selected_x = x_column or numeric_columns[0]
             series = pd.to_numeric(dataframe[selected_x], errors="coerce").dropna()
             if series.empty:
-                raise FileReadError("Недостаточно числовых значений для histogram.")
+                raise FileReadError(tr("Недостаточно числовых значений для histogram."))
             bins = min(20, max(8, int(np.sqrt(len(series)))))
             axis.hist(series, bins=bins, color=PALETTE["hist"], edgecolor="#8d3f28")
             axis.set_title(f"Histogram: {selected_x}")
             axis.set_xlabel(selected_x)
-            axis.set_ylabel("Частота")
-            description = f"Распределение значений колонки «{selected_x}»."
+            axis.set_ylabel(tr("Частота"))
+            description = tr("Распределение значений колонки «{0}».", selected_x)
         elif chart_type == "line":
             if not numeric_columns:
-                raise FileReadError("Для line нужен хотя бы один числовой столбец.")
+                raise FileReadError(tr("Для line нужен хотя бы один числовой столбец."))
             plot_frame = dataframe[[selected_x, selected_y]].copy()
             plot_frame[selected_y] = pd.to_numeric(plot_frame[selected_y], errors="coerce")
             plot_frame = plot_frame.dropna(subset=[selected_y]).head(50)
             if plot_frame.empty:
-                raise FileReadError("Недостаточно данных для line графика.")
+                raise FileReadError(tr("Недостаточно данных для line графика."))
             axis.plot(
                 plot_frame[selected_x].astype(str),
                 plot_frame[selected_y],
@@ -420,11 +422,11 @@ class ChartService:
                 linewidth=2.2,
                 marker="o",
             )
-            axis.set_title(f"Line chart: {selected_y} от {selected_x}")
+            axis.set_title(tr("Line chart: {0} от {1}", selected_y, selected_x))
             axis.set_xlabel(selected_x)
             axis.set_ylabel(selected_y)
             axis.tick_params(axis="x", rotation=35)
-            description = f"Линейная динамика «{selected_y}» по оси «{selected_x}»."
+            description = tr("Линейная динамика «{0}» по оси «{1}».", selected_y, selected_x)
         else:
             if numeric_columns:
                 group_x = x_column or (dimension_columns or list(dataframe.columns))[0]
@@ -439,17 +441,17 @@ class ChartService:
                     .head(12)
                 )
                 if grouped.empty:
-                    raise FileReadError("Недостаточно данных для bar графика.")
+                    raise FileReadError(tr("Недостаточно данных для bar графика."))
                 axis.bar(grouped.index.astype(str), grouped.values, color=PALETTE["bar"])
-                axis.set_ylabel(f"Среднее {group_y}")
+                axis.set_ylabel(tr("Среднее {0}", group_y))
                 axis.set_title(f"Bar chart: {group_x}")
-                description = f"Средние значения «{group_y}» по категориям «{group_x}»."
+                description = tr("Средние значения «{0}» по категориям «{1}».", group_y, group_x)
             else:
                 counts = dataframe[selected_x].astype(str).value_counts().head(12)
                 axis.bar(counts.index, counts.values, color=PALETTE["bar"])
-                axis.set_ylabel("Количество")
+                axis.set_ylabel(tr("Количество"))
                 axis.set_title(f"Bar chart: {selected_x}")
-                description = f"Частоты по колонке «{selected_x}»."
+                description = tr("Частоты по колонке «{0}».", selected_x)
             axis.tick_params(axis="x", rotation=30)
 
         self._save(figure, output_path)
@@ -475,10 +477,10 @@ class ChartService:
 
         if chart_type == "histogram":
             axis.hist(grayscale.ravel(), bins=32, color=PALETTE["hist"], edgecolor="#8d3f28")
-            axis.set_title("Гистограмма яркости пикселей")
+            axis.set_title(tr("Гистограмма яркости пикселей"))
             axis.set_xlabel("Intensity")
-            axis.set_ylabel("Количество")
-            description = "Распределение интенсивности пикселей изображения."
+            axis.set_ylabel(tr("Количество"))
+            description = tr("Распределение интенсивности пикселей изображения.")
         elif chart_type == "bar":
             if array.ndim == 2:
                 labels = ["L"]
@@ -489,16 +491,16 @@ class ChartService:
                 values = [array[:, :, index].mean() for index in range(array.shape[2])]
                 colors = [PALETTE["neutral"], PALETTE["bar"], PALETTE["hist"], "#8d3f28"][: len(labels)]
             axis.bar(labels, values, color=colors)
-            axis.set_title("Средние значения по каналам")
-            axis.set_ylabel("Среднее значение")
-            description = "Средние значения по каналам изображения."
+            axis.set_title(tr("Средние значения по каналам"))
+            axis.set_ylabel(tr("Среднее значение"))
+            description = tr("Средние значения по каналам изображения.")
         else:
             profile = grayscale.mean(axis=0)
             axis.plot(np.arange(len(profile)), profile, color=PALETTE["neutral"], linewidth=2.0)
-            axis.set_title("Яркость по горизонтали")
+            axis.set_title(tr("Яркость по горизонтали"))
             axis.set_xlabel("X coordinate")
-            axis.set_ylabel("Средняя яркость")
-            description = "Средняя яркость по горизонтальной оси изображения."
+            axis.set_ylabel(tr("Средняя яркость"))
+            description = tr("Средняя яркость по горизонтальной оси изображения.")
 
         self._save(figure, output_path)
         return {

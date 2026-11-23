@@ -1,5 +1,6 @@
-const DEFAULT_LOADING_TITLE = "Выполняем запрос…";
-const DEFAULT_LOADING_SUBTITLE = "Обычно это занимает несколько секунд";
+const IS_EN = document.documentElement.lang === "en";
+const DEFAULT_LOADING_TITLE = IS_EN ? "Processing your request…" : "Выполняем запрос…";
+const DEFAULT_LOADING_SUBTITLE = IS_EN ? "This usually takes a few seconds" : "Обычно это занимает несколько секунд";
 
 const getOverlay = () => document.getElementById("loading-overlay");
 
@@ -68,7 +69,7 @@ const setupComposer = () => {
                 return;
             }
             filePill.hidden = false;
-            filePill.textContent = `Выбрано: ${file.name}`;
+            filePill.textContent = `${IS_EN ? "Selected" : "Выбрано"}: ${file.name}`;
         };
 
         fileInput.addEventListener("change", syncFilePill);

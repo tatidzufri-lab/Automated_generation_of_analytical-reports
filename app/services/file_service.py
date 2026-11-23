@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import tr
+
 import json
 import logging
 import mimetypes
@@ -97,7 +99,7 @@ class FileService:
         kind = SUPPORTED_EXTENSIONS.get(extension)
         if not kind:
             raise UnsupportedFileError(
-                "Поддерживаются CSV, Excel, JSON и изображения PNG/JPG/JPEG/BMP/GIF/WEBP."
+                tr("Поддерживаются CSV, Excel, JSON и изображения PNG/JPG/JPEG/BMP/GIF/WEBP.")
             )
 
         file_id = uuid4().hex
@@ -112,7 +114,7 @@ class FileService:
                     total_size += len(chunk)
                     if total_size > self.settings.max_file_size_bytes:
                         raise FileTooLargeError(
-                            f"Размер файла превышает лимит {self.settings.max_file_size}."
+                            tr("Размер файла превышает лимит {0}.", self.settings.max_file_size)
                         )
                     buffer.write(chunk)
         except FileTooLargeError:
@@ -123,7 +125,7 @@ class FileService:
 
         if total_size == 0:
             destination.unlink(missing_ok=True)
-            raise EmptyFileError("Файл пустой. Загрузите файл с данными.")
+            raise EmptyFileError(tr("Файл пустой. Загрузите файл с данными."))
 
         content_type = upload.content_type or mimetypes.guess_type(destination.name)[0] or "application/octet-stream"
         stored_file = StoredFile(
@@ -145,7 +147,7 @@ class FileService:
     def get_file(self, file_id: str) -> StoredFile:
         metadata_path = self.settings.upload_dir / f"{file_id}.json"
         if not metadata_path.exists():
-            raise FileReadError("Файл не найден или срок хранения истек.")
+            raise FileReadError(tr("Файл не найден или срок хранения истек."))
         return StoredFile(**json.loads(metadata_path.read_text(encoding="utf-8")))
 
     def read_dataframe(self, stored_file: StoredFile) -> pd.DataFrame:
@@ -158,13 +160,13 @@ class FileService:
             elif stored_file.extension == ".json":
                 dataframe = self._read_json(path)
             else:
-                raise FileReadError("Этот файл не является табличным.")
+                raise FileReadError(tr("Этот файл не является табличным."))
         except (ValueError, TypeError, OSError, json.JSONDecodeError) as exc:
             logger.exception("Failed to read data file %s", stored_file.path)
-            raise FileReadError("Не удалось прочитать файл. Проверьте формат и содержимое.") from exc
+            raise FileReadError(tr("Не удалось прочитать файл. Проверьте формат и содержимое.")) from exc
 
         if dataframe.empty:
-            raise EmptyFileError("Таблица не содержит строк для анализа.")
+            raise EmptyFileError(tr("Таблица не содержит строк для анализа."))
         return dataframe
 
     def open_image(self, stored_file: StoredFile) -> Image.Image:
@@ -173,7 +175,7 @@ class FileService:
             image.load()
         except (FileNotFoundError, UnidentifiedImageError, OSError) as exc:
             logger.exception("Failed to open image %s", stored_file.path)
-            raise FileReadError("Не удалось прочитать изображение.") from exc
+            raise FileReadError(tr("Не удалось прочитать изображение.")) from exc
         return image
 
     def build_preview_context(self, stored_file: StoredFile, rows: int = 15) -> dict[str, Any]:
@@ -320,4 +322,4 @@ class FileService:
             if all(isinstance(value, list) for value in payload.values()):
                 return pd.DataFrame(payload)
             return pd.json_normalize(payload)
-        raise FileReadError("JSON должен содержать объект или массив объектов.")
+        raise FileReadError(tr("JSON должен содержать объект или массив объектов."))

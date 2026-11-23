@@ -4,7 +4,7 @@
 <section id="page-shell" class="chat-layout">
     <aside class="side-rail">
         <section class="panel rail-section">
-            <h2>Шаг 1 · Файл</h2>
+            <h2>{{ tr("Шаг 1 · Файл") }}</h2>
             <div class="context-card">
                 <div class="context-card__title">
                     <strong>{{ preview.file.original_name }}</strong>
@@ -13,60 +13,60 @@
                 <div class="preview-meta">
                     <span>{{ preview.file_size_kb }} KB</span>
                     {% if preview.kind == "table" %}
-                        <span>{{ preview.row_count }} строк</span>
-                        <span>{{ preview.column_count }} колонок</span>
+                        <span>{{ preview.row_count }} {{ tr("строк") }}</span>
+                        <span>{{ preview.column_count }} {{ tr("колонок") }}</span>
                     {% else %}
                         <span>{{ preview.image_width }}×{{ preview.image_height }}</span>
                     {% endif %}
                 </div>
             </div>
-            <a class="ghost-btn wide-btn" href="/" hx-get="/" hx-target="#page-shell" hx-swap="outerHTML" hx-push-url="true" style="margin-top: 0.7rem;">← Загрузить другой файл</a>
+            <a class="ghost-btn wide-btn" href="/" hx-get="/" hx-target="#page-shell" hx-swap="outerHTML" hx-push-url="true" style="margin-top: 0.7rem;">{{ tr("← Загрузить другой файл") }}</a>
         </section>
 
         <section class="panel rail-section {% if not analysis_done %}rail-section--primary{% endif %}">
-            <h2>Шаг 2 · Анализ</h2>
+            <h2>{{ tr("Шаг 2 · Анализ") }}</h2>
             {% if analysis_done %}
                 <div class="status-banner status-banner--success" style="margin-bottom: 0.7rem;">
                     <span class="status-banner__icon">✓</span>
-                    <div class="status-banner__text"><strong>Анализ выполнен</strong></div>
+                    <div class="status-banner__text"><strong>{{ tr("Анализ выполнен") }}</strong></div>
                 </div>
-                <form class="action-form" hx-post="/actions/analyze/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="Обновляем анализ…">
-                    <button class="ghost-btn wide-btn" type="submit">Пересчитать анализ</button>
+                <form class="action-form" hx-post="/actions/analyze/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="{{ tr("Обновляем анализ…") }}">
+                    <button class="ghost-btn wide-btn" type="submit">{{ tr("Пересчитать анализ") }}</button>
                 </form>
             {% else %}
                 <p class="muted-note" style="margin-bottom: 0.7rem;">
-                    Запустите анализ, чтобы собрать бизнес-метрики и графики. После этого появятся кнопки для скачивания отчётов.
+                    {{ tr("Запустите анализ, чтобы собрать бизнес-метрики и графики. После этого появятся кнопки для скачивания отчётов.") }}
                 </p>
-                <form class="action-form" hx-post="/actions/analyze/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="Анализируем данные и строим графики…" data-loading-subtitle="Подсчёт метрик и генерация PNG занимают несколько секунд">
-                    <button class="cta-btn wide-btn" type="submit">🔍 Запустить анализ</button>
+                <form class="action-form" hx-post="/actions/analyze/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="{{ tr("Анализируем данные и строим графики…") }}" data-loading-subtitle="{{ tr("Подсчёт метрик и генерация PNG занимают несколько секунд") }}">
+                    <button class="cta-btn wide-btn" type="submit">{{ tr("🔍 Запустить анализ") }}</button>
                 </form>
             {% endif %}
         </section>
 
         {% if analysis_done %}
             <section class="panel rail-section rail-section--primary">
-                <h2>Шаг 3 · Скачать отчёт</h2>
+                <h2>{{ tr("Шаг 3 · Скачать отчёт") }}</h2>
                 <p class="muted-note" style="margin-bottom: 0.7rem;">
-                    Выберите формат — файл соберётся в пару секунд и появится в блоке результатов справа.
+                    {{ tr("Выберите формат — файл соберётся в пару секунд и появится в блоке результатов справа.") }}
                 </p>
 
-                <form class="action-form" hx-post="/actions/pdf/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="Собираем PDF-отчёт…">
-                    <button class="primary-btn wide-btn" type="submit">📄 PDF-отчёт</button>
+                <form class="action-form" hx-post="/actions/pdf/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="{{ tr("Собираем PDF-отчёт…") }}">
+                    <button class="primary-btn wide-btn" type="submit">{{ tr("📄 PDF-отчёт") }}</button>
                 </form>
 
                 {% if preview.kind == "table" %}
-                <form class="action-form" hx-post="/actions/pptx/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="Собираем PowerPoint-презентацию…">
+                <form class="action-form" hx-post="/actions/pptx/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="{{ tr("Собираем PowerPoint-презентацию…") }}">
                     <button class="primary-btn wide-btn" type="submit">📊 PowerPoint</button>
                 </form>
                 {% endif %}
 
-                <form class="action-form" hx-post="/actions/report/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="Формируем DOCX…">
-                    <button class="ghost-btn wide-btn" type="submit">📝 DOCX-отчёт</button>
+                <form class="action-form" hx-post="/actions/report/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="{{ tr("Формируем DOCX…") }}">
+                    <button class="ghost-btn wide-btn" type="submit">{{ tr("📝 DOCX-отчёт") }}</button>
                 </form>
 
                 {% if preview.kind == "table" %}
-                <form class="action-form" hx-post="/actions/business/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="Собираем полный бизнес-пакет…" data-loading-subtitle="Графики, PDF и PowerPoint — одним нажатием">
-                    <button class="cta-btn wide-btn" type="submit" style="margin-top: 0.4rem;">🚀 Полный пакет (PDF + PPTX)</button>
+                <form class="action-form" hx-post="/actions/business/{{ preview.file.file_id }}" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="{{ tr("Собираем полный бизнес-пакет…") }}" data-loading-subtitle="{{ tr("Графики, PDF и PowerPoint — одним нажатием") }}">
+                    <button class="cta-btn wide-btn" type="submit" style="margin-top: 0.4rem;">{{ tr("🚀 Полный пакет (PDF + PPTX)") }}</button>
                 </form>
                 {% endif %}
             </section>
@@ -74,30 +74,30 @@
 
         {% if analysis_done and preview.kind == "table" %}
             <section class="panel rail-section">
-                <h2>Дополнительно</h2>
+                <h2>{{ tr("Дополнительно") }}</h2>
                 <details>
-                    <summary>Построить отдельный график</summary>
-                    <form class="action-form" hx-post="/actions/chart/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="Строим график…" style="margin-top: 0.7rem;">
+                    <summary>{{ tr("Построить отдельный график") }}</summary>
+                    <form class="action-form" hx-post="/actions/chart/{{ preview.file.file_id }}" hx-target="#result-panel" hx-swap="outerHTML" data-loading-title="{{ tr("Строим график…") }}" style="margin-top: 0.7rem;">
                         <label>
-                            <span>Тип</span>
+                            <span>{{ tr("Тип") }}</span>
                             <select name="chart_type">
-                                <optgroup label="Бизнес-графики">
-                                    <option value="time_series">Динамика продаж</option>
-                                    <option value="top_items">Топ позиций</option>
-                                    <option value="daily_count">Количество по дням</option>
-                                    <option value="monthly_sales">Продажи по месяцам</option>
-                                    <option value="cumulative">Накопительные продажи</option>
-                                    <option value="distribution">Распределение сумм</option>
+                                <optgroup label="{{ tr("Бизнес-графики") }}">
+                                    <option value="time_series">{{ tr("Динамика продаж") }}</option>
+                                    <option value="top_items">{{ tr("Топ позиций") }}</option>
+                                    <option value="daily_count">{{ tr("Количество по дням") }}</option>
+                                    <option value="monthly_sales">{{ tr("Продажи по месяцам") }}</option>
+                                    <option value="cumulative">{{ tr("Накопительные продажи") }}</option>
+                                    <option value="distribution">{{ tr("Распределение сумм") }}</option>
                                 </optgroup>
-                                <optgroup label="Базовые">
-                                    <option value="line">Линейный</option>
-                                    <option value="bar">Столбчатый</option>
-                                    <option value="histogram" selected>Гистограмма</option>
+                                <optgroup label="{{ tr("Базовые") }}">
+                                    <option value="line">{{ tr("Линейный") }}</option>
+                                    <option value="bar">{{ tr("Столбчатый") }}</option>
+                                    <option value="histogram" selected>{{ tr("Гистограмма") }}</option>
                                 </optgroup>
                             </select>
                         </label>
                         <label>
-                            <span>Ось X</span>
+                            <span>{{ tr("Ось X") }}</span>
                             <select name="x_column">
                                 {% for column in preview.dimension_columns %}
                                     <option value="{{ column }}" {% if column == preview.recommended_x %}selected{% endif %}>{{ column }}</option>
@@ -110,7 +110,7 @@
                             </select>
                         </label>
                         <label>
-                            <span>Ось Y</span>
+                            <span>{{ tr("Ось Y") }}</span>
                             <select name="y_column">
                                 {% for column in preview.numeric_columns %}
                                     <option value="{{ column }}" {% if column == preview.recommended_y %}selected{% endif %}>{{ column }}</option>
@@ -120,7 +120,7 @@
                                 {% endif %}
                             </select>
                         </label>
-                        <button class="ghost-btn wide-btn" type="submit">Построить</button>
+                        <button class="ghost-btn wide-btn" type="submit">{{ tr("Построить") }}</button>
                     </form>
                 </details>
             </section>
@@ -129,12 +129,12 @@
 
     <div class="chat-stage panel">
         <div class="hero">
-            <h1>{% if analysis_done %}Результаты анализа{% else %}📊 Файл готов к обработке{% endif %}</h1>
+            <h1>{% if analysis_done %}{{ tr("Результаты анализа") }}{% else %}{{ tr("📊 Файл готов к обработке") }}{% endif %}</h1>
             <p>
                 {% if analysis_done %}
-                    Ниже — метрики, графики и исходные данные. Справа — кнопки скачивания в нужном формате.
+                    {{ tr("Ниже — метрики, графики и исходные данные. Справа — кнопки скачивания в нужном формате.") }}
                 {% else %}
-                    Нажмите <strong>«Запустить анализ»</strong> слева, чтобы получить бизнес-метрики, графики и возможность сохранить отчёт в PDF, DOCX или PowerPoint.
+                    {{ tr("Нажмите") }} <strong>{{ tr("«Запустить анализ»") }}</strong> {{ tr("слева, чтобы получить бизнес-метрики, графики и возможность сохранить отчёт в PDF, DOCX или PowerPoint.") }}
                 {% endif %}
             </p>
         </div>
@@ -151,9 +151,9 @@
                 <span class="status-banner__icon">✓</span>
                 <div class="status-banner__text">
                     {% if preview.kind == "table" %}
-                        <strong>Загружено {{ preview.row_count }} записей</strong> из файла {{ preview.file.original_name }}
+                        <strong>{{ tr("Загружено") }} {{ preview.row_count }} {{ tr("записей") }}</strong> {{ tr("из файла") }} {{ preview.file.original_name }}
                     {% else %}
-                        <strong>Загружено изображение</strong> {{ preview.image_width }}×{{ preview.image_height }} ({{ preview.image_format }})
+                        <strong>{{ tr("Загружено изображение") }}</strong> {{ preview.image_width }}×{{ preview.image_height }} ({{ preview.image_format }})
                     {% endif %}
                 </div>
             </div>
@@ -161,7 +161,7 @@
                 <div class="status-banner status-banner--info">
                     <span class="status-banner__icon">i</span>
                     <div class="status-banner__text">
-                        <strong>Найдены числовые колонки:</strong> {{ preview.numeric_columns|join(", ") }}
+                        <strong>{{ tr("Найдены числовые колонки:") }}</strong> {{ preview.numeric_columns|join(", ") }}
                     </div>
                 </div>
             {% endif %}
@@ -176,12 +176,12 @@
         <article class="panel" style="margin-top: 0.5rem;">
             <div class="card-heading">
                 <div>
-                    <h2>Предпросмотр данных</h2>
+                    <h2>{{ tr("Предпросмотр данных") }}</h2>
                     <p>
                         {% if preview.kind == "table" %}
-                            Первые строки файла и профиль колонок.
+                            {{ tr("Первые строки файла и профиль колонок.") }}
                         {% else %}
-                            Загруженное изображение.
+                            {{ tr("Загруженное изображение.") }}
                         {% endif %}
                     </p>
                 </div>

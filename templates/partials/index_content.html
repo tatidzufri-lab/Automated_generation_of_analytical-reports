@@ -1,14 +1,14 @@
 <section id="page-shell" class="page-grid">
     <div class="hero-card">
         <p class="eyebrow">Analytics Assistant</p>
-        <h1>Автоматическая сборка аналитических отчётов из CSV, Excel и JSON</h1>
+        <h1>{{ tr("Автоматическая сборка аналитических отчётов из CSV, Excel и JSON") }}</h1>
         <p class="hero-text">
-            Загрузите файл — и через пару кликов получите бизнес-метрики, шесть специализированных графиков, готовые DOCX, PDF и PowerPoint-отчёты. Весь пайплайн работает на FastAPI + HTMX, без SPA и внешних сервисов.
+            {{ tr("Загрузите файл — и через пару кликов получите бизнес-метрики, шесть специализированных графиков, готовые DOCX, PDF и PowerPoint-отчёты. Весь пайплайн работает на FastAPI + HTMX, без SPA и внешних сервисов.") }}
         </p>
         <div class="hero-points">
-            <span>Preview и профиль колонок</span>
-            <span>Бизнес-метрики: выручка · средний чек</span>
-            <span>6 графиков одним кликом</span>
+            <span>{{ tr("Preview и профиль колонок") }}</span>
+            <span>{{ tr("Бизнес-метрики: выручка · средний чек") }}</span>
+            <span>{{ tr("6 графиков одним кликом") }}</span>
             <span>DOCX · PDF · PPTX</span>
         </div>
     </div>
@@ -16,8 +16,8 @@
     <div class="upload-card">
         <div class="card-heading">
             <div>
-                <h2>Загрузка данных</h2>
-                <p>Поддерживаются CSV, Excel, JSON и изображения. До 10 MB по умолчанию.</p>
+                <h2>{{ tr("Загрузка данных") }}</h2>
+                <p>{{ tr("Поддерживаются CSV, Excel, JSON и изображения. До 10 MB по умолчанию.") }}</p>
             </div>
         </div>
 
@@ -41,30 +41,30 @@
             hx-swap="outerHTML"
             hx-encoding="multipart/form-data"
             enctype="multipart/form-data"
-            data-loading-title="Загружаем и разбираем файл…"
-            data-loading-subtitle="Определяем колонки и готовим превью"
+            data-loading-title="{{ tr("Загружаем и разбираем файл…") }}"
+            data-loading-subtitle="{{ tr("Определяем колонки и готовим превью") }}"
         >
             <label class="dropzone" for="data-file">
                 <input id="data-file" name="data_file" type="file" accept=".csv,.xlsx,.xls,.json,.png,.jpg,.jpeg,.bmp,.gif,.webp" required>
                 <span class="dropzone-badge">Drag &amp; drop</span>
-                <strong>Перетащите файл или нажмите, чтобы выбрать</strong>
+                <strong>{{ tr("Перетащите файл или нажмите, чтобы выбрать") }}</strong>
                 <small>CSV · XLSX · JSON · PNG / JPG</small>
             </label>
-            <button class="cta-btn" type="submit">Загрузить и открыть preview →</button>
+            <button class="cta-btn" type="submit">{{ tr("Загрузить и открыть preview →") }}</button>
         </form>
 
         <div class="support-grid">
             <article>
-                <h3>Табличные данные</h3>
-                <p>Автоопределение типов колонок, бизнес-метрики, mean / median / std и профиль пропусков.</p>
+                <h3>{{ tr("Табличные данные") }}</h3>
+                <p>{{ tr("Автоопределение типов колонок, бизнес-метрики, mean / median / std и профиль пропусков.") }}</p>
             </article>
             <article>
-                <h3>Графики &amp; отчёты</h3>
-                <p>Шесть бизнес-графиков, DOCX-отчёт, брендированный PDF и PowerPoint-презентация.</p>
+                <h3>{{ tr("Графики & отчёты") }}</h3>
+                <p>{{ tr("Шесть бизнес-графиков, DOCX-отчёт, брендированный PDF и PowerPoint-презентация.") }}</p>
             </article>
             <article>
-                <h3>AI-чат</h3>
-                <p>Задавайте вопросы к данным — ассистент запускает анализ и собирает артефакты прямо в диалоге.</p>
+                <h3>{{ tr("AI-чат") }}</h3>
+                <p>{{ tr("Задавайте вопросы к данным — ассистент запускает анализ и собирает артефакты прямо в диалоге.") }}</p>
             </article>
         </div>
     </div>

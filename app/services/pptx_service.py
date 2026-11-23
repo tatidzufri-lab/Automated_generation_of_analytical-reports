@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import tr
+
 import logging
 from typing import Any
 
@@ -38,7 +40,7 @@ class PptxService:
         report_name = self._build_report_name(stored_file.file_id)
         output_path = self.settings.output_dir / report_name
 
-        title = title or f"Аналитический отчёт · {stored_file.original_name}"
+        title = title or tr("Аналитический отчёт · {0}", stored_file.original_name)
 
         try:
             prs = Presentation()
@@ -59,7 +61,7 @@ class PptxService:
             prs.save(str(output_path))
         except Exception as exc:  # pragma: no cover - external tool errors
             logger.exception("Failed to generate PPTX for %s", stored_file.file_id)
-            raise PptxServiceError(f"Не удалось сгенерировать PPTX: {exc}") from exc
+            raise PptxServiceError(tr("Не удалось сгенерировать PPTX: {0}", exc)) from exc
 
         logger.info("Generated PPTX %s for %s", report_name, stored_file.file_id)
         return {
@@ -67,7 +69,7 @@ class PptxService:
             "kind": "pptx",
             "file_name": report_name,
             "display_name": humanize_artifact_name(report_name),
-            "description": "Презентация с метриками, графиками и таблицей топ позиций.",
+            "description": tr("Презентация с метриками, графиками и таблицей топ позиций."),
             "storage_url": f"/storage/outputs/{report_name}",
             "download_url": f"/download/{report_name}",
         }
@@ -79,7 +81,7 @@ class PptxService:
         slide = prs.slides.add_slide(prs.slide_layouts[0])
         slide.shapes.title.text = title
         subtitle = slide.placeholders[1]
-        subtitle.text = f"Сгенерирован: {format_local('%d.%m.%Y %H:%M')}"
+        subtitle.text = tr("Сгенерирован: {0}", format_local('%d.%m.%Y %H:%M'))
 
     def _add_metrics_slide(
         self,
@@ -88,7 +90,7 @@ class PptxService:
         business_metrics: dict[str, Any] | None,
     ) -> None:
         slide = prs.slides.add_slide(prs.slide_layouts[1])
-        slide.shapes.title.text = "Ключевые метрики"
+        slide.shapes.title.text = tr("Ключевые метрики")
         body = slide.placeholders[1].text_frame
         body.clear()
 
@@ -96,18 +98,18 @@ class PptxService:
         if business_metrics and (
             business_metrics.get("total_sales") or business_metrics.get("total_orders")
         ):
-            lines.append(f"• Общая сумма: {business_metrics.get('total_sales', 0):,.2f}".replace(",", " "))
-            lines.append(f"• Средний чек: {business_metrics.get('avg_ticket', 0):,.2f}".replace(",", " "))
-            lines.append(f"• Количество записей: {business_metrics.get('total_orders', 0):,}".replace(",", " "))
+            lines.append(tr("• Общая сумма: {0:,.2f}", business_metrics.get('total_sales', 0)).replace(",", " "))
+            lines.append(tr("• Средний чек: {0:,.2f}", business_metrics.get('avg_ticket', 0)).replace(",", " "))
+            lines.append(tr("• Количество записей: {0:,}", business_metrics.get('total_orders', 0)).replace(",", " "))
 
         summary = analysis.get("summary") if analysis else None
         if summary:
-            lines.append(f"• Строк / колонок: {summary.get('rows', 0)} × {summary.get('columns', 0)}")
-            lines.append(f"• Числовых метрик: {summary.get('numeric_columns', 0)}")
-            lines.append(f"• Пропусков: {summary.get('missing_cells', 0)}")
+            lines.append(tr("• Строк / колонок: {0} × {1}", summary.get('rows', 0), summary.get('columns', 0)))
+            lines.append(tr("• Числовых метрик: {0}", summary.get('numeric_columns', 0)))
+            lines.append(tr("• Пропусков: {0}", summary.get('missing_cells', 0)))
 
         if not lines:
-            lines.append("• Недостаточно данных для сводных метрик.")
+            lines.append(tr("• Недостаточно данных для сводных метрик."))
 
         first = body.paragraphs[0]
         first.text = lines[0]
@@ -157,14 +159,14 @@ class PptxService:
 
         title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(9), Inches(0.9))
         title_frame = title_box.text_frame
-        title_frame.text = "Топ позиций"
+        title_frame.text = tr("Топ позиций")
         title_frame.paragraphs[0].font.size = Pt(24)
         title_frame.paragraphs[0].font.bold = True
 
         rows = len(top_items) + 1
         table = slide.shapes.add_table(rows, 2, Inches(1), Inches(1.4), Inches(8), Inches(5.2)).table
-        table.cell(0, 0).text = "Позиция"
-        table.cell(0, 1).text = "Сумма"
+        table.cell(0, 0).text = tr("Позиция")
+        table.cell(0, 1).text = tr("Сумма")
         for col_index in range(2):
             table.cell(0, col_index).text_frame.paragraphs[0].font.bold = True
 
@@ -175,7 +177,7 @@ class PptxService:
 
     def _add_insights_slide(self, prs: Presentation, insights: list[str]) -> None:
         slide = prs.slides.add_slide(prs.slide_layouts[1])
-        slide.shapes.title.text = "Выводы"
+        slide.shapes.title.text = tr("Выводы")
         body = slide.placeholders[1].text_frame
         body.clear()
         body.paragraphs[0].text = f"• {insights[0]}"

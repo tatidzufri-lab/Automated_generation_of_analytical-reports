@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ current_lang() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page_title or "Analytics Assistant" }}</title>
-    <link rel="stylesheet" href="/static/css/styles.css?v=3">
+    <link rel="stylesheet" href="/static/css/styles.css?v=4">
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-    <script defer src="/static/js/app.js?v=3"></script>
+    <script defer src="/static/js/app.js?v=4"></script>
 </head>
 <body>
     <header class="topbar">
@@ -14,12 +14,17 @@
             <span class="brand-mark">AA</span>
             <span>
                 <strong>Analytics Assistant</strong>
-                <small>Загрузка · анализ · отчёты в PDF, PPTX, DOCX</small>
+                <small>{{ tr("Загрузка · анализ · отчёты в PDF, PPTX, DOCX") }}</small>
             </span>
         </a>
         <nav class="topnav">
-            <a href="/">Загрузить файл</a>
-            <a href="/chat">AI-чат</a>
+            <a href="/">{{ tr("Загрузить файл") }}</a>
+            <a href="/chat">{{ tr("AI-чат") }}</a>
+        </nav>
+        <nav class="lang-switch" aria-label="Language">
+            {% for code in ("ru", "en") %}
+                {% if code == current_lang() %}<span class="lang-switch__item is-active" aria-current="true">{{ code | upper }}</span>{% else %}<a class="lang-switch__item" href="{{ request.url.path }}?lang={{ code }}" hreflang="{{ code }}">{{ code | upper }}</a>{% endif %}
+            {% endfor %}
         </nav>
     </header>
 
@@ -31,8 +36,8 @@
         <div class="loading-card">
             <div class="loader-ring loader-ring--lg"></div>
             <div>
-                <strong id="loading-title">Выполняем запрос…</strong>
-                <span id="loading-subtitle">Обычно это занимает несколько секунд</span>
+                <strong id="loading-title">{{ tr("Выполняем запрос…") }}</strong>
+                <span id="loading-subtitle">{{ tr("Обычно это занимает несколько секунд") }}</span>
             </div>
         </div>
     </div>

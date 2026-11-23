@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import tr
+
 from pathlib import Path
 from typing import Any
 
@@ -86,7 +88,7 @@ class ExportService:
             "display_name": humanize_artifact_name(file_name),
             "storage_url": f"/storage/outputs/{file_name}",
             "download_url": f"/download/{file_name}",
-            "description": "Markdown-файл с краткой сводкой и последними сообщениями чата.",
+            "description": tr("Markdown-файл с краткой сводкой и последними сообщениями чата."),
         }
 
     def _build_file_name(self, conversation_id: str) -> str:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import install_jinja, tr
+
 from fastapi import APIRouter, Form, HTTPException, Request, status
 from fastapi.responses import FileResponse
 from fastapi.templating import Jinja2Templates
@@ -21,6 +23,7 @@ from app.services.pptx_service import PptxServiceError
 
 settings = get_settings()
 templates = Jinja2Templates(directory=str(settings.templates_dir))
+install_jinja(templates.env)
 
 router = APIRouter()
 
@@ -61,9 +64,9 @@ async def analyze_action(request: Request, file_id: str):
             charts_generated = len(fallback) if fallback else 0
 
     message = (
-        f"Анализ выполнен. Построено {charts_generated} графиков."
+        tr("Анализ выполнен. Построено {0} графиков.", charts_generated)
         if charts_generated
-        else "Анализ выполнен."
+        else tr("Анализ выполнен.")
     )
     context = _panel_context(request, file_id, success_message=message)
     return templates.TemplateResponse("partials/preview_content.html", context)
@@ -80,7 +83,7 @@ async def chart_action(
     try:
         stored_file = file_service.get_file(file_id)
         chart_service.generate_chart(stored_file, chart_type, x_column=x_column or None, y_column=y_column or None)
-        context = _panel_context(request, file_id, success_message=f"График «{chart_type}» построен и сохранён.")
+        context = _panel_context(request, file_id, success_message=tr("График «{0}» построен и сохранён.", chart_type))
     except FileReadError as exc:
         context = _panel_context(request, file_id, error_message=str(exc))
     return templates.TemplateResponse("partials/result_panel.html", context)
@@ -91,9 +94,9 @@ async def business_charts_action(request: Request, file_id: str):
     stored_file = file_service.get_file(file_id)
     charts = chart_service.generate_business_charts(stored_file)
     message = (
-        f"Собран пакет бизнес-графиков ({len(charts)} шт.)."
+        tr("Собран пакет бизнес-графиков ({0} шт.).", len(charts))
         if charts
-        else "Не нашёл подходящих бизнес-колонок (дата/сумма). Проверьте файл."
+        else tr("Не нашёл подходящих бизнес-колонок (дата/сумма). Проверьте файл.")
     )
     context = _panel_context(request, file_id, success_message=message if charts else None, error_message=None if charts else message)
     return templates.TemplateResponse("partials/result_panel.html", context)
@@ -109,7 +112,7 @@ async def report_action(request: Request, file_id: str):
     report_service.generate_report(
         stored_file, analysis, chart_records[:3], preview_context, business_metrics=business
     )
-    context = _panel_context(request, file_id, success_message="DOCX-отчёт сформирован и готов к скачиванию.")
+    context = _panel_context(request, file_id, success_message=tr("DOCX-отчёт сформирован и готов к скачиванию."))
     return templates.TemplateResponse("partials/result_panel.html", context)
 
 
@@ -121,7 +124,7 @@ async def pdf_action(request: Request, file_id: str):
     chart_records = chat_service._ensure_business_charts(stored_file, business)
     try:
         pdf_service.generate_report(stored_file, analysis, business, chart_records[:6])
-        context = _panel_context(request, file_id, success_message="PDF-отчёт с графиками и таблицами готов.")
+        context = _panel_context(request, file_id, success_message=tr("PDF-отчёт с графиками и таблицами готов."))
     except PdfServiceError as exc:
         context = _panel_context(request, file_id, error_message=str(exc))
     return templates.TemplateResponse("partials/result_panel.html", context)
@@ -135,7 +138,7 @@ async def pptx_action(request: Request, file_id: str):
     chart_records = chat_service._ensure_business_charts(stored_file, business)
     try:
         pptx_service.generate_report(stored_file, analysis, business, chart_records[:6])
-        context = _panel_context(request, file_id, success_message="PowerPoint презентация сформирована.")
+        context = _panel_context(request, file_id, success_message=tr("PowerPoint презентация сформирована."))
     except PptxServiceError as exc:
         context = _panel_context(request, file_id, error_message=str(exc))
     return templates.TemplateResponse("partials/result_panel.html", context)
@@ -161,7 +164,7 @@ async def business_report_action(request: Request, file_id: str):
         errors.append(f"PPTX: {exc}")
 
     success_message = (
-        f"Бизнес-пакет готов: {len(chart_records)} графиков, PDF и PPTX."
+        tr("Бизнес-пакет готов: {0} графиков, PDF и PPTX.", len(chart_records))
         if not errors
         else None
     )
@@ -174,5 +177,5 @@ async def business_report_action(request: Request, file_id: str):
 async def download_artifact(artifact_name: str):
     candidate = settings.output_dir / artifact_name
     if not candidate.exists() or candidate.parent != settings.output_dir:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Файл не найден.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=tr("Файл не найден."))
     return FileResponse(path=candidate, filename=candidate.name)

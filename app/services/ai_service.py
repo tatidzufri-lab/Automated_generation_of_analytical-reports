@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import tr
+
 import base64
 import json
 import logging
@@ -59,11 +61,11 @@ class AIService:
     ) -> AIPlan:
         if OpenAI is None:
             raise AIServiceConfigurationError(
-                "Python-пакет `openai` не установлен. Выполните `pip install -r requirements.txt`."
+                tr("Python-пакет `openai` не установлен. Выполните `pip install -r requirements.txt`.")
             )
         if not self.settings.openai_api_key:
             raise AIServiceConfigurationError(
-                "Не задан `OPENAI_API_KEY` в `.env`."
+                tr("Не задан `OPENAI_API_KEY` в `.env`.")
             )
 
         client = self._get_client()
@@ -109,7 +111,7 @@ class AIService:
                 }
             )
 
-        current_request = user_text.strip() or "Пользователь загрузил файл без дополнительного текста."
+        current_request = user_text.strip() or tr("Пользователь загрузил файл без дополнительного текста.")
         prompt_payload = {
             "current_user_message": current_request,
             "recent_messages": history,
@@ -123,10 +125,10 @@ class AIService:
                     "x_column": "string | null",
                     "y_column": "string | null",
                 },
-                {"type": "generate_report", "description": "DOCX отчёт"},
-                {"type": "generate_pdf", "description": "PDF отчёт с графиками и таблицами"},
-                {"type": "generate_pptx", "description": "PowerPoint презентация"},
-                {"type": "generate_business_report", "description": "Полный бизнес-пакет: набор графиков + PDF + PPTX"},
+                {"type": "generate_report", "description": tr("DOCX отчёт")},
+                {"type": "generate_pdf", "description": tr("PDF отчёт с графиками и таблицами")},
+                {"type": "generate_pptx", "description": tr("PowerPoint презентация")},
+                {"type": "generate_business_report", "description": tr("Полный бизнес-пакет: набор графиков + PDF + PPTX")},
                 {"type": "save_summary"},
             ],
             "response_contract": {
@@ -139,8 +141,7 @@ class AIService:
             {
                 "type": "input_text",
                 "text": (
-                    "Верни только JSON без markdown-обёртки. "
-                    "Строго следуй схеме из `response_contract`.\n\n"
+                    tr("Верни только JSON без markdown-обёртки. Строго следуй схеме из `response_contract`.\n\n")
                     + json.dumps(prompt_payload, ensure_ascii=False, indent=2)
                 ),
             },
@@ -158,20 +159,7 @@ class AIService:
 
     def _system_prompt(self) -> str:
         return (
-            "Ты — AI Analytics Assistant для веб-приложения на русском языке. "
-            "Ты отвечаешь как реальный ИИ от OpenAI, помогаешь анализировать таблицы и изображения, "
-            "объясняешь выводы простым языком и при необходимости выбираешь действия для приложения. "
-            "Не придумывай действия вне разрешённого списка. "
-            "Если пользователь просит график, отчёт или сохранение — добавь действие в `actions`. "
-            "Для продаж и табличных данных предпочитай бизнес-типы графиков: "
-            "`time_series`, `top_items`, `daily_count`, `monthly_sales`, `cumulative`, `distribution`. "
-            "Для произвольных числовых — `histogram`, `bar`, `line`. "
-            "Если просят полный отчёт/презентацию по продажам — используй `generate_business_report` "
-            "(он автоматически построит набор графиков и сформирует PDF и PPTX). "
-            "Отдельно доступны `generate_pdf`, `generate_pptx`, `generate_report` (DOCX). "
-            "Если активный файл — изображение, используй визуальное содержимое изображения в ответе. "
-            "Если активный файл — таблица, опирайся на переданные поля, preview, summary и признаки колонок. "
-            "Если действий не требуется, верни пустой список `actions`."
+            tr("Ты — AI Analytics Assistant для веб-приложения на русском языке. Ты отвечаешь как реальный ИИ от OpenAI, помогаешь анализировать таблицы и изображения, объясняешь выводы простым языком и при необходимости выбираешь действия для приложения. Не придумывай действия вне разрешённого списка. Если пользователь просит график, отчёт или сохранение — добавь действие в `actions`. Для продаж и табличных данных предпочитай бизнес-типы графиков: `time_series`, `top_items`, `daily_count`, `monthly_sales`, `cumulative`, `distribution`. Для произвольных числовых — `histogram`, `bar`, `line`. Если просят полный отчёт/презентацию по продажам — используй `generate_business_report` (он автоматически построит набор графиков и сформирует PDF и PPTX). Отдельно доступны `generate_pdf`, `generate_pptx`, `generate_report` (DOCX). Если активный файл — изображение, используй визуальное содержимое изображения в ответе. Если активный файл — таблица, опирайся на переданные поля, preview, summary и признаки колонок. Если действий не требуется, верни пустой список `actions`.")
         )
 
     def _parse_response_text(self, raw_text: str) -> AIPlan:
@@ -185,11 +173,11 @@ class AIService:
             payload = json.loads(text)
         except json.JSONDecodeError:
             logger.warning("OpenAI returned non-JSON output; falling back to plain text")
-            return AIPlan(assistant_message=text or "Не удалось разобрать ответ модели.", actions=[])
+            return AIPlan(assistant_message=text or tr("Не удалось разобрать ответ модели."), actions=[])
 
         assistant_message = str(payload.get("assistant_message", "")).strip()
         if not assistant_message:
-            assistant_message = "Готово. Я обработал запрос."
+            assistant_message = tr("Готово. Я обработал запрос.")
 
         allowed_actions = {
             "preview",

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import install_jinja, tr
+
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, status
@@ -20,6 +22,7 @@ from app.services.report_service import ReportService
 
 settings = get_settings()
 templates = Jinja2Templates(directory=str(settings.templates_dir))
+install_jinja(templates.env)
 
 file_service = FileService(settings)
 analysis_service = AnalysisService(file_service)
@@ -79,7 +82,7 @@ async def chat_page(request: Request, conversation_id: str):
     try:
         conversation = chat_service.get_conversation(conversation_id)
     except ChatNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Чат не найден.") from exc
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=tr("Чат не найден.")) from exc
 
     return render_page(
         request,
@@ -105,7 +108,7 @@ async def preview_page(request: Request, file_id: str):
             "artifacts": artifacts,
             "analysis": None,
             "error_message": None,
-            "success_message": "Файл загружен. Можно запускать анализ и строить графики.",
+            "success_message": tr("Файл загружен. Можно запускать анализ и строить графики."),
         },
     )
 
@@ -131,6 +134,6 @@ async def result_page(request: Request, file_id: str):
             "analysis": analysis,
             "artifacts": artifacts,
             "error_message": None,
-            "success_message": "Собран актуальный аналитический срез по файлу.",
+            "success_message": tr("Собран актуальный аналитический срез по файлу."),
         },
     )

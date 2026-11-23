@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import install_jinja, tr
+
 import logging
 from pathlib import Path
 from typing import Any
@@ -30,6 +32,7 @@ class PdfService:
             loader=FileSystemLoader(str(self.template_dir)),
             autoescape=select_autoescape(["html", "xml"]),
         )
+        install_jinja(self._env)
 
     def generate_report(
         self,
@@ -61,7 +64,7 @@ class PdfService:
         )
 
         context = {
-            "title": title or f"Аналитический отчёт · {stored_file.original_name}",
+            "title": title or tr("Аналитический отчёт · {0}", stored_file.original_name),
             "generated_at": format_local("%d.%m.%Y %H:%M"),
             "source_file": stored_file.original_name,
             "summary": analysis.get("summary"),
@@ -80,7 +83,7 @@ class PdfService:
             from weasyprint import CSS, HTML  # lazy import to avoid import cost at module load
         except ImportError as exc:  # pragma: no cover - depends on system libraries
             raise PdfServiceError(
-                "WeasyPrint не установлен. Установите системные библиотеки (pango, cairo) и выполните pip install weasyprint."
+                tr("WeasyPrint не установлен. Установите системные библиотеки (pango, cairo) и выполните pip install weasyprint.")
             ) from exc
 
         template = self._env.get_template("pdf_report.html")
@@ -92,13 +95,16 @@ class PdfService:
         ]
         try:
             stylesheets = [CSS(filename=str(path)) for path in css_files if path.exists()]
+            # Подпись номера страницы задана в CSS, поэтому язык подставляется отдельным правилом.
+            page_label = tr("Страница").replace('"', "")
+            stylesheets.append(CSS(string='@page { @bottom-center { content: "%s " counter(page); } }' % page_label))
             HTML(string=html_content, base_url=str(self.template_dir)).write_pdf(
                 target=str(output_path),
                 stylesheets=stylesheets,
             )
         except Exception as exc:  # pragma: no cover - external tool
             logger.exception("Failed to generate PDF for %s", stored_file.file_id)
-            raise PdfServiceError(f"Не удалось сгенерировать PDF: {exc}") from exc
+            raise PdfServiceError(tr("Не удалось сгенерировать PDF: {0}", exc)) from exc
 
         logger.info("Generated PDF %s for %s", report_name, stored_file.file_id)
         return {
@@ -106,7 +112,7 @@ class PdfService:
             "kind": "pdf",
             "file_name": report_name,
             "display_name": humanize_artifact_name(report_name),
-            "description": "Аналитический отчёт в PDF с графиками и таблицами.",
+            "description": tr("Аналитический отчёт в PDF с графиками и таблицами."),
             "storage_url": f"/storage/outputs/{report_name}",
             "download_url": f"/download/{report_name}",
         }

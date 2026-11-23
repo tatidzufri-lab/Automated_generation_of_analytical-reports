@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.core.i18n import install_jinja, tr
+
 from fastapi import APIRouter, File, Request, UploadFile, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -17,6 +19,7 @@ from app.services.file_service import (
 
 settings = get_settings()
 templates = Jinja2Templates(directory=str(settings.templates_dir))
+install_jinja(templates.env)
 file_service = FileService(settings)
 
 router = APIRouter()
@@ -55,7 +58,7 @@ async def upload_file(request: Request, data_file: UploadFile = File(...)):
             "artifacts": artifacts,
             "analysis": None,
             "error_message": None,
-            "success_message": "Файл загружен. Preview подготовлен без перезагрузки страницы.",
+            "success_message": tr("Файл загружен. Preview подготовлен без перезагрузки страницы."),
         },
     )
     response.headers["HX-Push-Url"] = f"/preview/{stored_file.file_id}"

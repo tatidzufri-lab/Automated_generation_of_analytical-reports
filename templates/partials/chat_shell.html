@@ -1,7 +1,7 @@
 <section id="page-shell" class="chat-layout">
     <aside class="side-rail">
         <section class="panel rail-section">
-            <h2>📎 Активный файл</h2>
+            <h2>{{ tr("📎 Активный файл") }}</h2>
 
             {% if active_preview %}
                 <div class="context-card">
@@ -11,9 +11,9 @@
                     </div>
                     {% if active_preview.kind == "table" %}
                         <div class="preview-meta">
-                            <span>{{ active_preview.row_count }} строк</span>
-                            <span>{{ active_preview.column_count }} колонок</span>
-                            <span>{{ active_preview.numeric_columns|length }} числовых</span>
+                            <span>{{ active_preview.row_count }} {{ tr("строк") }}</span>
+                            <span>{{ active_preview.column_count }} {{ tr("колонок") }}</span>
+                            <span>{{ active_preview.numeric_columns|length }} {{ tr("числовых") }}</span>
                         </div>
                     {% else %}
                         <img class="message-preview-image" src="{{ active_preview.storage_url }}" alt="{{ active_preview.file.original_name }}">
@@ -26,32 +26,32 @@
                 </div>
             {% else %}
                 <div class="empty-card">
-                    <strong>Файл ещё не выбран</strong>
-                    <p>Прикрепите CSV / Excel / JSON или изображение в поле сообщения.</p>
+                    <strong>{{ tr("Файл ещё не выбран") }}</strong>
+                    <p>{{ tr("Прикрепите CSV / Excel / JSON или изображение в поле сообщения.") }}</p>
                 </div>
             {% endif %}
         </section>
 
         <section class="panel rail-section">
-            <h2>⚡ Быстрые команды</h2>
+            <h2>{{ tr("⚡ Быстрые команды") }}</h2>
             <div class="quick-grid">
-                <form hx-post="/chat/{{ conversation.conversation_id }}/message" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="Проводим анализ данных…">
-                    <input type="hidden" name="message_text" value="Проанализируй текущий файл">
-                    <button class="ghost-btn wide-btn" type="submit" {% if not active_preview %}disabled{% endif %}>Анализ данных</button>
+                <form hx-post="/chat/{{ conversation.conversation_id }}/message" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="{{ tr("Проводим анализ данных…") }}">
+                    <input type="hidden" name="message_text" value="{{ tr("Проанализируй текущий файл") }}">
+                    <button class="ghost-btn wide-btn" type="submit" {% if not active_preview %}disabled{% endif %}>{{ tr("Анализ данных") }}</button>
                 </form>
-                <form hx-post="/chat/{{ conversation.conversation_id }}/message" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="Строим графики…">
-                    <input type="hidden" name="message_text" value="Построй time_series график и топ позиций">
-                    <button class="ghost-btn wide-btn" type="submit" {% if not active_preview %}disabled{% endif %}>Построить графики</button>
+                <form hx-post="/chat/{{ conversation.conversation_id }}/message" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="{{ tr("Строим графики…") }}">
+                    <input type="hidden" name="message_text" value="{{ tr("Построй time_series график и топ позиций") }}">
+                    <button class="ghost-btn wide-btn" type="submit" {% if not active_preview %}disabled{% endif %}>{{ tr("Построить графики") }}</button>
                 </form>
-                <form hx-post="/chat/{{ conversation.conversation_id }}/message" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="Собираем полный пакет отчётов…" data-loading-subtitle="PDF и PowerPoint — это займёт несколько секунд">
-                    <input type="hidden" name="message_text" value="Собери полный бизнес-отчёт в PDF и PowerPoint">
-                    <button class="cta-btn wide-btn" type="submit" {% if not active_preview %}disabled{% endif %}>🚀 PDF + PPTX пакет</button>
+                <form hx-post="/chat/{{ conversation.conversation_id }}/message" hx-target="#page-shell" hx-swap="outerHTML" data-loading-title="{{ tr("Собираем полный пакет отчётов…") }}" data-loading-subtitle="{{ tr("PDF и PowerPoint — это займёт несколько секунд") }}">
+                    <input type="hidden" name="message_text" value="{{ tr("Собери полный бизнес-отчёт в PDF и PowerPoint") }}">
+                    <button class="cta-btn wide-btn" type="submit" {% if not active_preview %}disabled{% endif %}>{{ tr("🚀 PDF + PPTX пакет") }}</button>
                 </form>
             </div>
         </section>
 
         <section class="panel rail-section">
-            <h2>📁 Файлы в чате</h2>
+            <h2>{{ tr("📁 Файлы в чате") }}</h2>
             {% if files %}
                 <div class="file-list">
                     {% for file in files %}
@@ -70,14 +70,14 @@
                 </div>
             {% else %}
                 <div class="empty-card">
-                    <strong>Пока без вложений</strong>
-                    <p>Добавьте первый файл — он появится здесь.</p>
+                    <strong>{{ tr("Пока без вложений") }}</strong>
+                    <p>{{ tr("Добавьте первый файл — он появится здесь.") }}</p>
                 </div>
             {% endif %}
         </section>
 
         <section class="panel rail-section">
-            <h2>📦 Сохранённые артефакты</h2>
+            <h2>{{ tr("📦 Сохранённые артефакты") }}</h2>
             {% if saved_artifacts %}
                 <div class="artifact-list">
                     {% for artifact in saved_artifacts %}
@@ -92,8 +92,8 @@
                 </div>
             {% else %}
                 <div class="empty-card">
-                    <strong>Артефактов ещё нет</strong>
-                    <p>Постройте график или сформируйте отчёт.</p>
+                    <strong>{{ tr("Артефактов ещё нет") }}</strong>
+                    <p>{{ tr("Постройте график или сформируйте отчёт.") }}</p>
                 </div>
             {% endif %}
         </section>
@@ -103,17 +103,17 @@
         <div class="chat-stage__header">
             <div>
                 <p class="eyebrow">AI Workspace</p>
-                <h1>Чат по данным и отчётам</h1>
-                <p>Загрузите таблицу или изображение, попросите анализ — и получите графики, DOCX, PDF или PowerPoint-презентацию в диалоге.</p>
+                <h1>{{ tr("Чат по данным и отчётам") }}</h1>
+                <p>{{ tr("Загрузите таблицу или изображение, попросите анализ — и получите графики, DOCX, PDF или PowerPoint-презентацию в диалоге.") }}</p>
                 <div class="preview-meta" style="margin-top: 0.6rem;">
                     {% if ai_enabled %}
                         <span>OpenAI: {{ ai_model }}</span>
                     {% else %}
-                        <span>OpenAI не настроен</span>
+                        <span>{{ tr("OpenAI не настроен") }}</span>
                     {% endif %}
                 </div>
             </div>
-            <a class="ghost-btn" href="/">Новый чат</a>
+            <a class="ghost-btn" href="/">{{ tr("Новый чат") }}</a>
         </div>
 
         <div id="chat-thread" class="chat-thread">
@@ -125,7 +125,7 @@
                     <div class="message__body">
                         <div class="message__meta">
                             <strong>
-                                {% if message.role == "assistant" %}Ассистент{% else %}Вы{% endif %}
+                                {% if message.role == "assistant" %}{{ tr("Ассистент") }}{% else %}{{ tr("Вы") }}{% endif %}
                             </strong>
                             <span>{{ message.time_label }}</span>
                         </div>
@@ -145,10 +145,10 @@
                                         </div>
                                         <div class="artifact-card__actions">
                                             {% if attachment.preview_url and attachment.kind == "chart" %}
-                                                <a class="ghost-btn" href="{{ attachment.preview_url }}" target="_blank" rel="noreferrer">Открыть</a>
+                                                <a class="ghost-btn" href="{{ attachment.preview_url }}" target="_blank" rel="noreferrer">{{ tr("Открыть") }}</a>
                                             {% endif %}
                                             {% if attachment.download_url %}
-                                                <a class="secondary-btn" href="{{ attachment.download_url }}">Скачать</a>
+                                                <a class="secondary-btn" href="{{ attachment.download_url }}">{{ tr("Скачать") }}</a>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -201,10 +201,10 @@
                         {% if message.analysis %}
                             <div class="analysis-card">
                                 <div class="stats-strip">
-                                    <span>{{ message.analysis.summary.rows }} строк</span>
-                                    <span>{{ message.analysis.summary.columns }} колонок</span>
-                                    <span>{{ message.analysis.summary.numeric_columns }} числовых</span>
-                                    <span>{{ message.analysis.summary.missing_cells }} пропусков</span>
+                                    <span>{{ message.analysis.summary.rows }} {{ tr("строк") }}</span>
+                                    <span>{{ message.analysis.summary.columns }} {{ tr("колонок") }}</span>
+                                    <span>{{ message.analysis.summary.numeric_columns }} {{ tr("числовых") }}</span>
+                                    <span>{{ message.analysis.summary.missing_cells }} {{ tr("пропусков") }}</span>
                                 </div>
 
                                 {% if message.analysis.insights %}
@@ -251,15 +251,15 @@
             hx-swap="outerHTML"
             hx-encoding="multipart/form-data"
             enctype="multipart/form-data"
-            data-loading-title="Обрабатываем сообщение…"
-            data-loading-subtitle="Ответ появится через несколько секунд"
+            data-loading-title="{{ tr("Обрабатываем сообщение…") }}"
+            data-loading-subtitle="{{ tr("Ответ появится через несколько секунд") }}"
         >
             <div class="composer__top">
                 <textarea
                     id="message-text"
                     name="message_text"
                     rows="1"
-                    placeholder="Например: проанализируй файл, построй гистограмму, собери отчёт в PDF и PowerPoint"
+                    placeholder="{{ tr("Например: проанализируй файл, построй гистограмму, собери отчёт в PDF и PowerPoint") }}"
                 ></textarea>
             </div>
 
@@ -271,13 +271,13 @@
                         type="file"
                         accept=".csv,.xlsx,.xls,.json,.png,.jpg,.jpeg,.bmp,.gif,.webp"
                     >
-                    <span>📎 Файл или изображение</span>
+                    <span>{{ tr("📎 Файл или изображение") }}</span>
                 </label>
 
                 <div id="selected-file-pill" class="selected-file-pill" hidden></div>
 
                 <div class="composer__actions">
-                    <button class="primary-btn" type="submit">Отправить</button>
+                    <button class="primary-btn" type="submit">{{ tr("Отправить") }}</button>
                 </div>
             </div>
         </form>
