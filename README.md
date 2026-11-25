@@ -1,90 +1,91 @@
-# Analytics Assistant: AI-помощник для аналитических отчетов
+# Analytics Assistant: auto-generated reports and an AI chat over your data
 
-Веб-приложение превращает таблицу или картинку в готовый аналитический отчет: набор графиков, документ Word, PDF и презентацию PowerPoint. Работать можно кнопками или текстом в AI-чате на русском языке. (учебный проект)
+A web app that turns a table or an image into a finished analytical report: a set of charts, a Word document, a PDF and a PowerPoint deck. You can work with buttons or by typing in an AI chat.
 
-![Результаты анализа](demo/02_analysis_results_overview.png)
+This is a practice project. The interface works in Russian and English. Live demo: [analytics.tatidzufri.com](https://analytics.tatidzufri.com). Case study: [tatidzufri.com/en/case/business-reports](https://tatidzufri.com/en/case/business-reports).
 
-## О проекте
+![Analysis results](demo/02_analysis_results_overview.png)
 
-Пользователь загружает файл, приложение само определяет, какие в нем колонки (дата, сумма, категория, количество), считает метрики, строит графики и собирает отчеты сразу в трех форматах. Для нестандартной задачи можно написать запрос в чат обычными словами, и помощник сам выберет нужные действия.
+## About the project
 
-## Задача
+The user uploads a file, and the app works out which columns it has (date, amount, category, quantity), computes metrics, draws charts and builds reports in three formats at once. For a non-standard task you can type a request in the chat in plain words, and the assistant picks the actions itself.
 
-У аналитика, маркетолога или предпринимателя часто есть сырые выгрузки: продажи из 1С, отчеты Amazon, данные CRM. Чтобы показать их руководству или клиенту, нужно посчитать метрики (выручку, средний чек, топ позиций), построить графики и собрать все в аккуратный документ.
+## The task
 
-Вручную на это уходит от получаса до нескольких часов. Особенно неудобно, когда формат нужен разный: кому-то Word, кому-то PDF, а руководству слайды.
+An analyst, a marketer or a business owner often has raw exports: sales from 1C (a Russian accounting system), Amazon reports, CRM data. To show them to management or a client, you have to compute metrics (revenue, average order, top items), draw charts and put it all into a neat document.
 
-## Решение
+It's especially awkward when people need different formats: Word for one, PDF for another, slides for management.
 
-1. **Загрузка.** CSV, Excel, JSON или картинка размером до 10 МБ перетаскиваются в зону загрузки.
-2. **Анализ в один клик.** Число строк и колонок, типы данных, пропуски и бизнес-метрики: сумма, средний чек, количество записей, топ позиций.
-3. **Графики.** Шесть бизнес-графиков для таблиц с продажами (динамика по дням, топ позиций, количество по дням, продажи по месяцам, накопительный итог, распределение сумм) и три базовых для любых таблиц.
-4. **Отчеты в трех форматах.** Word с метриками, описанием колонок и графиками. PDF в фирменном оформлении с титулом и таблицами. PowerPoint со слайдом под каждую метрику и график. Можно скачать по отдельности или пакетом.
-5. **AI-чат.** Запросы вроде «собери полный бизнес-отчет в PDF и PowerPoint» модель превращает в команды, которые выполняет сервер: построить график, собрать документ, сохранить выводы. Итог беседы сохраняется в Markdown.
-6. **Работа без ключа.** Если ключ OpenAI не задан, чат разбирает команды по словам-маркерам, а все кнопки интерфейса продолжают работать.
+## How it works
 
-Файлы получают понятные названия, например «Динамика продаж · 22.04.2026 19:47», время в отчетах указано по местному часовому поясу.
+1. **Upload.** A CSV, Excel, JSON file or an image up to 10 MB is dragged into the upload area.
+2. **One-click analysis.** Row and column counts, data types, gaps and business metrics: total, average order, number of records, top items.
+3. **Charts.** Six business charts for sales tables (daily trend, top items, quantity by day, sales by month, running total, amount distribution) and three basic ones for any table.
+4. **Reports in three formats.** Word with metrics, column descriptions and charts. A branded PDF with a title page and tables. PowerPoint with a slide per metric and chart. Download them one by one or as a bundle.
+5. **AI chat.** Requests like "build a full business report in PDF and PowerPoint" are turned by the model into commands the server runs: draw a chart, build a document, save the conclusions. The conversation summary is saved as Markdown.
+6. **Works without a key.** If no OpenAI key is set, the chat parses commands by marker words, and every button in the interface keeps working.
 
-## Как это выглядит
+Files get readable names, for example "Sales trend · 22.04.2026 19:47", and times in reports follow the local time zone.
 
-**Главная страница** с формой загрузки.
+## What it looks like
 
-![Главная и загрузка файла](demo/01_upload_home.png)
+**Home page** with the upload form.
 
-**Графики** с подписями и кнопкой «Скачать».
+![Home and file upload](demo/01_upload_home.png)
 
-![Галерея графиков](demo/03_analysis_charts_grid.png)
+**Charts** with captions and a "Download" button.
 
-**AI-чат.** Пустой чат, сводка после загрузки файла, график прямо в диалоге и готовые PDF и PowerPoint со ссылками на скачивание.
+![Chart gallery](demo/03_analysis_charts_grid.png)
 
-| Пустой чат | Файл загружен |
+**AI chat.** An empty chat, the summary after a file upload, a chart right in the conversation, and finished PDF and PowerPoint files with download links.
+
+| Empty chat | File uploaded |
 |:-:|:-:|
 | ![](demo/04_ai_chat_empty_state.png) | ![](demo/05_ai_chat_file_uploaded.png) |
-| **График в диалоге** | **Отчеты готовы** |
+| **Chart in the conversation** | **Reports ready** |
 | ![](demo/06_ai_chat_chart_preview.png) | ![](demo/07_ai_chat_reports_download.png) |
 
-Примеры готовых отчетов: [demo_report.pdf](demo/examples/demo_report.pdf), [demo_report.docx](demo/examples/demo_report.docx), [demo_presentation.pptx](demo/examples/demo_presentation.pptx).
+Sample reports: [demo_report.pdf](demo/examples/demo_report.pdf), [demo_report.docx](demo/examples/demo_report.docx), [demo_presentation.pptx](demo/examples/demo_presentation.pptx).
 
-## Результат
+## Results
 
-- Отчеты собираются автоматически в нужном формате.
-- С данными можно работать через чат, без аналитика.
-- Графики строятся сами, настраивать их вручную не нужно.
-- На демо-данных полный комплект (шесть графиков, PDF и PowerPoint) готов через несколько секунд после загрузки.
+- Reports are built automatically in the format you need.
+- You can work with the data through the chat, without an analyst.
+- Charts are drawn automatically, with no manual setup.
 
-## Стек технологий
+## Tech stack
 
-| Технология | Зачем используется |
+| Technology | What it's for |
 |---|---|
-| **Python 3.11** | Анализ данных, графики, сборка документов |
-| **FastAPI + Uvicorn** | Сервер: загрузка файлов, страницы, действия пользователя, запросы к AI |
-| **Jinja2 + HTMX** | Страницы интерфейса и шаблон PDF. HTMX обновляет части страницы без перезагрузки |
-| **Pandas, NumPy, openpyxl** | Чтение CSV, Excel и JSON, метрики, типы колонок, группировки |
-| **Pillow** | Работа с картинками, если загружена картинка вместо таблицы |
-| **Matplotlib** | Все девять видов графиков в PNG |
-| **python-docx** | Отчет Word |
-| **WeasyPrint** | PDF из HTML-шаблона с CSS |
-| **python-pptx** | Презентация PowerPoint |
-| **OpenAI API** | Чат на естественном языке. Модель задается в `.env`, по умолчанию `gpt-5-mini` |
-| **Docker Compose** | Запуск со всеми системными библиотеками для PDF |
+| **Python 3.11** | Data analysis, charts, building documents |
+| **FastAPI + Uvicorn** | The server: file uploads, pages, user actions, AI requests |
+| **Jinja2 + HTMX** | Interface pages and the PDF template. HTMX updates parts of the page without a reload |
+| **Pandas, NumPy, openpyxl** | Reading CSV, Excel and JSON, metrics, column types, grouping |
+| **Pillow** | Handling an image uploaded instead of a table |
+| **Matplotlib** | All nine chart types as PNG |
+| **python-docx** | The Word report |
+| **WeasyPrint** | PDF from an HTML template with CSS |
+| **python-pptx** | The PowerPoint deck |
+| **OpenAI API** | The natural-language chat. The model is set in `.env`, `gpt-5-mini` by default |
+| **Docker Compose** | Runs with all the system libraries PDF needs |
 
-## Структура репозитория
+## Repository structure
 
-- `app/`: сервер. Настройки, маршруты страниц и действий, сервисы для файлов, анализа, графиков, отчетов, чата и AI.
-- `templates/`: страницы интерфейса и шаблон PDF.
-- `static/`: стили и скрипты интерфейса.
-- `demo/`: демо-данные (`demo_data.csv`, `demo_data.json`, выгрузка в стиле Amazon), скриншоты и примеры отчетов в `demo/examples/`.
+- `app/`: the server. Settings, page and action routes, services for files, analysis, charts, reports, chat and AI.
+- `templates/`: interface pages and the PDF template.
+- `static/`: interface styles and scripts.
+- `demo/`: demo data (`demo_data.csv`, `demo_data.json`, an Amazon-style export), screenshots and sample reports in `demo/examples/`.
 
-## Запуск
+## Running it
 
-Через Docker:
+With Docker:
 
 ```bash
-cp .env.example .env          # ключ OpenAI по желанию
+cp .env.example .env          # OpenAI key optional
 docker compose up --build     # http://localhost:8000
 ```
 
-Локально нужен Python 3.11 и системные библиотеки WeasyPrint (Pango, через Homebrew или apt):
+Locally you need Python 3.11 and WeasyPrint's system libraries (Pango, via Homebrew or apt):
 
 ```bash
 python3.11 -m venv .venv && source .venv/bin/activate
@@ -93,14 +94,14 @@ cp .env.example .env
 uvicorn app.main:app --port 8000
 ```
 
-Загрузите `demo/demo_data.csv` и нажмите «Запустить анализ» или напишите в чат «собери бизнес-пакет».
+Upload `demo/demo_data.csv` and press "Run analysis", or type "build a business pack" in the chat.
 
-## Планы развития
+## Roadmap
 
-- Рассылка готовых отчетов на почту по расписанию.
-- Локальная модель (Ollama, llama.cpp) вместо OpenAI.
-- Загрузка данных напрямую из баз (PostgreSQL, ClickHouse), без выгрузки в файл.
+- Emailing finished reports on a schedule.
+- A local model (Ollama, llama.cpp) instead of OpenAI.
+- Loading data straight from databases (PostgreSQL, ClickHouse) without exporting to a file.
 
-## Автор
+## Author
 
-Татьяна Дзюбас, AI-инженер по автоматизации. Делаю Telegram-ботов, RAG-ассистентов и LLM-агентов, которые снимают рутину с небольших команд. Кейсы и контакты на [tatidzufri.com](https://tatidzufri.com).
+Tetiana Dziubas, AI automation engineer. I build Telegram bots, RAG assistants and LLM agents that take routine work off small teams. Case studies and contact: [tatidzufri.com/en](https://tatidzufri.com/en/).
